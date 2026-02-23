@@ -204,17 +204,17 @@ export default function AnggotaPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="md" onClick={handleImport}>
+            <Button variant="outline" size="md" onClick={handleImport} title="Import Excel">
               <Upload size={16} />
-              Import Excel
+              <span className="hidden sm:inline">Import Excel</span>
             </Button>
-            <Button variant="secondary" size="md" onClick={handleExportExcel}>
+            <Button variant="secondary" size="md" onClick={handleExportExcel} title="Export">
               <Download size={16} />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </Button>
-            <Button variant="primary" size="md" onClick={handleCreate}>
+            <Button variant="primary" size="md" onClick={handleCreate} title="Tambah Anggota">
               <Plus size={16} />
-              Tambah Anggota
+              <span className="hidden sm:inline">Tambah Anggota</span>
             </Button>
           </div>
         </div>

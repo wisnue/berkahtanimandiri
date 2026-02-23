@@ -14,7 +14,7 @@ import {
   settingsAuditLog,
   systemHealthMetrics,
 } from '../db/schema/settings';
-import { eq, desc, and, sql, gte, lte } from 'drizzle-orm';
+import { eq, desc, and, sql, gte, lte, isNull } from 'drizzle-orm';
 import { autoBackupScheduler } from '../services/autoBackupScheduler.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -326,7 +326,7 @@ export const getBackupHistory = async (
     const [{ count }] = await db
       .select({ count: sql<number>`COUNT(*)` })
       .from(backupHistory)
-      .where(eq(backupHistory.isDeleted, false));
+      .where(isNull(backupHistory.deletedAt));
 
     res.json({
       success: true,
@@ -359,7 +359,7 @@ export const downloadBackup = async (
       .where(
         and(
           eq(backupHistory.id, parseInt(id)),
-          eq(backupHistory.isDeleted, false),
+          isNull(backupHistory.deletedAt),
           eq(backupHistory.status, 'success')
         )
       );
@@ -463,7 +463,6 @@ export const deleteBackup = async (
     await db
       .update(backupHistory)
       .set({
-        isDeleted: true,
         deletedAt: new Date(),
       })
       .where(eq(backupHistory.id, parseInt(id)));

@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: kth-btm-backend
+    env: node
+    region: singapore
+    plan: free
+    rootDir: apps/backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Isi nilai di bawah ini di Render Dashboard → Environment
+      - key: DATABASE_URL
+        sync: false   # Isi manual di Render dashboard
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 5432
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true  # Render auto-generate secret
+      - key: CORS_ORIGIN
+        sync: false   # Isi dengan URL Vercel: https://namaapp.vercel.app
+      - key: BCRYPT_ROUNDS
+        value: "10"
+      - key: MAX_LOGIN_ATTEMPTS
+        value: "5"
+      - key: LOCKOUT_DURATION
+        value: "900000"
+      - key: MAX_FILE_SIZE
+        value: "10485760"
+      - key: UPLOAD_DIR
+        value: "/tmp/uploads"
+      - key: PNBP_TARIF_PER_HA
+        value: "15000"
+      - key: TAHUN_PNBP
+        value: "2026"
+      - key: OTP_ISSUER
+        value: "KTH-BTM"
+      - key: OTP_WINDOW
+        value: "1"

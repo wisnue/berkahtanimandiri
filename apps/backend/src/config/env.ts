@@ -79,7 +79,8 @@ export const config = {
       secure: env.NODE_ENV === 'production',
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'strict' as const,
+      // 'none' required for cross-domain (Vercel frontend + Render backend)
+      sameSite: env.NODE_ENV === 'production' ? ('none' as const) : ('lax' as const),
     },
   },
   
