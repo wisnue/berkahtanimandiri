@@ -170,33 +170,6 @@ export function Sidebar({ user, onCollapseChange, isMobileOpen = false, onMobile
           {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
 
-        {/* User info */}
-        {user && (
-          <div className={cn(
-            "px-4 py-3 border-b border-secondary-200 transition-all",
-            isCollapsed && "px-2"
-          )}>
-            <div className={cn(
-              "flex items-center gap-2",
-              isCollapsed && "justify-center"
-            )}>
-              <div className="h-8 w-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-primary-700 font-semibold text-xs">
-                  {(user.fullName ? user.fullName : 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                </span>
-              </div>
-              {!isCollapsed && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-secondary-900 truncate">
-                    {user.fullName || 'User'}
-                  </p>
-                  <p className="text-xs text-secondary-600 capitalize">{user.role || '-'}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Navigation */}
         <nav className="sidebar-nav flex-1 overflow-y-auto">
           {navigationGroups.map((group) => {

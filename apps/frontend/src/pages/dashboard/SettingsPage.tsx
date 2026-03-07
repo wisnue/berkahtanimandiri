@@ -352,10 +352,10 @@ export function SettingsPage() {
       <div className="space-y-4">
         {/* Header */}
         <div>
-          <h1 className="text-xl font-display font-bold text-secondary-900">
+          <h1 className="text-lg font-display font-bold text-secondary-900">
             Pengaturan Sistem
           </h1>
-          <p className="text-secondary-600 text-sm mt-0.5">
+          <p className="text-sm text-secondary-600 mt-0.5">
             Kelola seluruh konfigurasi aplikasi, backup data, dan monitoring sistem
           </p>
         </div>

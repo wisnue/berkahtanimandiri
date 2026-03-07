@@ -39,7 +39,7 @@ export function MainLayout({ children, user }: MainLayoutProps) {
       
       {/* Main content with padding for sidebar and header */}
       <main 
-        className={`transition-all duration-300 pt-[56px] ${
+        className={`transition-all duration-300 pt-[56px] bg-white min-h-screen ${
           isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'
         }`}
       >

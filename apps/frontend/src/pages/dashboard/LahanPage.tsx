@@ -20,6 +20,8 @@ export default function LahanPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [jenisTanamanFilter, setJenisTanamanFilter] = useState('');
+  const [tahunTanamFilter, setTahunTanamFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   
@@ -33,7 +35,7 @@ export default function LahanPage() {
     loadUser();
     loadData();
     loadStatistics();
-  }, [currentPage, searchTerm, statusFilter]);
+  }, [currentPage, searchTerm, statusFilter, jenisTanamanFilter, tahunTanamFilter]);
 
   const loadUser = async () => {
     const response = await authService.getCurrentUser();
@@ -49,6 +51,8 @@ export default function LahanPage() {
       limit: 10,
       search: searchTerm || undefined,
       statusLegalitas: statusFilter || undefined,
+      jenisTanaman: jenisTanamanFilter || undefined,
+      tahunTanam: tahunTanamFilter ? parseInt(tahunTanamFilter) : undefined,
     });
     
     if (response.success) {
@@ -115,6 +119,8 @@ export default function LahanPage() {
   const handleResetFilter = () => {
     setSearchTerm('');
     setStatusFilter('');
+    setJenisTanamanFilter('');
+    setTahunTanamFilter('');
     setCurrentPage(1);
   };
 
@@ -208,7 +214,7 @@ export default function LahanPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-xl font-display font-bold text-secondary-900">
+            <h1 className="text-lg font-display font-bold text-secondary-900">
               Lahan KHDPK
             </h1>
             <p className="text-sm text-secondary-600 mt-0.5">
@@ -218,13 +224,25 @@ export default function LahanPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={handleExportExcel}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-white rounded-md text-sm transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-white rounded-md text-xs transition-colors"
               style={{ backgroundColor: '#0284C7' }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0369A1'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0284C7'}
             >
               <Download size={16} />
               Export Excel
+            </button>
+            <button
+              onClick={() => setIsFilterOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors text-xs font-medium"
+            >
+              <Filter size={16} />
+              <span className="hidden sm:inline">Filter</span>
+              {(statusFilter || jenisTanamanFilter || tahunTanamFilter) && (
+                <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
+                  {[statusFilter, jenisTanamanFilter, tahunTanamFilter].filter(Boolean).length}
+                </span>
+              )}
             </button>
             <Button variant="primary" size="md" onClick={handleCreate}>
               <Plus size={16} className="mr-1.5" />
@@ -264,52 +282,6 @@ export default function LahanPage() {
           })}
         </div>
 
-        {/* Filter & Actions Bar */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-              {/* Search bar */}
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  type="search"
-                  placeholder="Cari kode lahan, nomor petak, jenis tanaman..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                />
-              </div>
-              
-              {/* Action buttons */}
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsFilterOpen(true)}
-                  className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                >
-                  <Filter size={16} />
-                  <span className="hidden sm:inline ml-2">Filter</span>
-                  {statusFilter && (
-                    <span className="ml-2 px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
-                      1
-                    </span>
-                  )}
-                </Button>
-                
-                <Button
-                  size="sm"
-                  onClick={handleExportExcel}
-                  className="bg-sky-600 hover:bg-sky-700"
-                >
-                  <Download size={16} />
-                  <span className="hidden sm:inline ml-2">Export</span>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Filter Drawer */}
         <FilterDrawer
           isOpen={isFilterOpen}
@@ -325,19 +297,43 @@ export default function LahanPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </FilterField>
-
           <FilterDivider label="Status" />
-
           <FilterField label="Status Legalitas">
             <FilterSelect
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               options={[
-                { value: 'sah', label: 'Sah' },
-                { value: 'proses', label: 'Proses' },
-                { value: 'ditolak', label: 'Ditolak' },
+                { value: 'sah', label: '✅ Sah / Terverifikasi' },
+                { value: 'proses', label: '⏳ Dalam Proses' },
+                { value: 'ditolak', label: '❌ Ditolak' },
               ]}
               placeholder="Semua Status"
+            />
+          </FilterField>
+          <FilterDivider label="Tanaman" />
+          <FilterField label="Jenis Tanaman">
+            <FilterSelect
+              value={jenisTanamanFilter}
+              onChange={(e) => setJenisTanamanFilter(e.target.value)}
+              options={[
+                { value: 'pohon', label: 'Pohon / Tegakan' },
+                { value: 'bambu', label: 'Bambu' },
+                { value: 'meranti', label: 'Meranti' },
+                { value: 'jati', label: 'Jati' },
+                { value: 'pinus', label: 'Pinus' },
+                { value: 'mahoni', label: 'Mahoni' },
+                { value: 'sengon', label: 'Sengon / Albasia' },
+                { value: 'lainnya', label: 'Lainnya' },
+              ]}
+              placeholder="Semua Jenis Tanaman"
+            />
+          </FilterField>
+          <FilterField label="Tahun Tanam">
+            <FilterSelect
+              value={tahunTanamFilter}
+              onChange={(e) => setTahunTanamFilter(e.target.value)}
+              options={[2018,2019,2020,2021,2022,2023,2024,2025].map(y => ({ value: String(y), label: String(y) }))}
+              placeholder="Semua Tahun"
             />
           </FilterField>
         </FilterDrawer>
@@ -390,7 +386,7 @@ export default function LahanPage() {
                     </tr>
                   ) : lahan.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-3 py-8 text-center text-sm text-secondary-500">
+                      <td colSpan={9} className="px-3 py-8 text-center text-xs text-secondary-500">
                         Tidak ada data lahan
                       </td>
                     </tr>
@@ -426,7 +422,7 @@ export default function LahanPage() {
                         <td className="px-3 py-2 whitespace-nowrap">
                           {getKondisiBadge(item.kondisiLahan)}
                         </td>
-                        <td className="px-3 py-2 whitespace-nowrap text-sm">
+                        <td className="px-3 py-2 whitespace-nowrap text-xs">
                           <div className="flex items-center gap-2">
                             <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
                               <Edit size={16} />

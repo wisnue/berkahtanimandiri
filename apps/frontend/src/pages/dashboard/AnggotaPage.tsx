@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Download, Edit, Trash2, Users, TrendingUp, Eye, Upload } from 'lucide-react';
+import { Plus, Search, Download, Edit, Trash2, Users, TrendingUp, Eye, Upload, Filter } from 'lucide-react';
 import { anggotaService, type Anggota, type AnggotaStatistics } from '@/services/anggota.service';
 import { authService, type User } from '@/services/auth.service';
 import { AnggotaFormModal } from '@/components/anggota/AnggotaFormModal';
@@ -13,6 +13,7 @@ import { exportToExcel, formatDate } from '@/lib/export';
 import { TableSkeleton, StatsSkeleton } from '@/components/ui/Skeleton';
 import { MobileCardsList, StatusBadge } from '@/components/ui/MobileCard';
 import { Pagination } from '@/components/ui/Pagination';
+import { FilterDrawer, FilterField, FilterSelect, FilterInput, FilterDivider } from '@/components/ui/FilterDrawer';
 
 export default function AnggotaPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -21,6 +22,9 @@ export default function AnggotaPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [jenisKelaminFilter, setJenisKelaminFilter] = useState('');
+  const [pendidikanFilter, setPendidikanFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   
@@ -36,7 +40,7 @@ export default function AnggotaPage() {
     loadUser();
     loadData();
     loadStatistics();
-  }, [currentPage, searchTerm, statusFilter]);
+  }, [currentPage, searchTerm, statusFilter, jenisKelaminFilter, pendidikanFilter]);
 
   const loadUser = async () => {
     const response = await authService.getCurrentUser();
@@ -52,6 +56,8 @@ export default function AnggotaPage() {
       limit: 10,
       search: searchTerm || undefined,
       status: statusFilter || undefined,
+      jenisKelamin: jenisKelaminFilter || undefined,
+      pendidikan: pendidikanFilter || undefined,
     });
     
     console.log('📊 Anggota Response:', {
@@ -196,7 +202,7 @@ export default function AnggotaPage() {
         {/* Page Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-display font-bold text-secondary-900">
+            <h1 className="text-lg font-display font-bold text-secondary-900">
               Manajemen Anggota
             </h1>
             <p className="text-secondary-600 text-sm mt-0.5">
@@ -212,6 +218,18 @@ export default function AnggotaPage() {
               <Download size={16} />
               <span className="hidden sm:inline">Export</span>
             </Button>
+            <button
+              onClick={() => setIsFilterOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors text-xs font-medium"
+            >
+              <Filter size={16} />
+              <span className="hidden sm:inline">Filter</span>
+              {(statusFilter || jenisKelaminFilter || pendidikanFilter) && (
+                <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
+                  {[statusFilter, jenisKelaminFilter, pendidikanFilter].filter(Boolean).length}
+                </span>
+              )}
+            </button>
             <Button variant="primary" size="md" onClick={handleCreate} title="Tambah Anggota">
               <Plus size={16} />
               <span className="hidden sm:inline">Tambah Anggota</span>
@@ -287,42 +305,60 @@ export default function AnggotaPage() {
           </div>
         )}
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="py-3">
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-400" size={16} />
-                <input
-                  type="search"
-                  placeholder="Cari nama, NIK, atau nomor anggota..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 border border-secondary-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-                />
-              </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-1.5 border border-secondary-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-              >
-                <option value="">Semua Status</option>
-                <option value="aktif">Aktif</option>
-                <option value="tidak_aktif">Tidak Aktif</option>
-              </select>
-              <button
-                onClick={handleExportExcel}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-white rounded-md text-sm transition-colors"
-                style={{ backgroundColor: '#0284C7' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0369A1'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0284C7'}
-              >
-                <Download size={16} />
-                Export Excel
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Filter Drawer */}
+        <FilterDrawer
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          onReset={() => { setStatusFilter(''); setJenisKelaminFilter(''); setPendidikanFilter(''); setSearchTerm(''); }}
+          title="Filter Anggota"
+        >
+          <FilterField label="Pencarian">
+            <FilterInput
+              type="search"
+              placeholder="Cari nama, NIK, atau nomor anggota..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </FilterField>
+          <FilterField label="Status Anggota">
+            <FilterSelect
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              options={[
+                { value: 'aktif', label: 'Aktif' },
+                { value: 'tidak_aktif', label: 'Tidak Aktif' },
+              ]}
+              placeholder="Semua Status"
+            />
+          </FilterField>
+          <FilterDivider label="Demografi" />
+          <FilterField label="Jenis Kelamin">
+            <FilterSelect
+              value={jenisKelaminFilter}
+              onChange={(e) => setJenisKelaminFilter(e.target.value)}
+              options={[
+                { value: 'laki-laki', label: 'Laki-laki' },
+                { value: 'perempuan', label: 'Perempuan' },
+              ]}
+              placeholder="Semua Jenis Kelamin"
+            />
+          </FilterField>
+          <FilterField label="Pendidikan Terakhir">
+            <FilterSelect
+              value={pendidikanFilter}
+              onChange={(e) => setPendidikanFilter(e.target.value)}
+              options={[
+                { value: 'SD', label: 'SD' },
+                { value: 'SMP', label: 'SMP' },
+                { value: 'SMA/SMK', label: 'SMA/SMK' },
+                { value: 'D3', label: 'D3/Diploma' },
+                { value: 'S1', label: 'S1/Sarjana' },
+                { value: 'S2', label: 'S2/Magister' },
+              ]}
+              placeholder="Semua Pendidikan"
+            />
+          </FilterField>
+        </FilterDrawer>
 
         {/* Desktop Table */}
         <Card className="hidden md:block">

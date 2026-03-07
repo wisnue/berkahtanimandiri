@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Search, LogOut, User, ChevronDown, FileText, Users, MapPin, DollarSign, Calendar, Grid, Wallet, HelpCircle, Moon, Shield, Clock, Lock, Menu } from 'lucide-react';
+import { Bell, Search, LogOut, User, ChevronDown, FileText, Users, MapPin, DollarSign, Calendar, Grid, Wallet, HelpCircle, Moon, Sun, Shield, Clock, Lock, Menu, X } from 'lucide-react';
 import { useAuth } from '@/app/AuthContext';
 import { useLocation } from 'wouter';
 import { searchService, type SearchResult } from '@/services/search.service';
@@ -24,6 +24,19 @@ export function Header({ onMenuClick }: HeaderProps) {
   const [userStats, setUserStats] = useState<UserStats>({ laporan: 24, aktivitas: 156, proyek: 8 });
   const searchRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode') === 'true';
+    if (saved) document.documentElement.classList.add('dark');
+    return saved;
+  });
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, icon: '⚠️', message: 'Terdapat tagihan PNBP yang belum dibayar', time: '5 menit lalu', read: false },
+    { id: 2, icon: '📋', message: 'Laporan keuangan bulan ini tersedia', time: '1 jam lalu', read: false },
+    { id: 3, icon: '✅', message: 'Data anggota aktif berhasil diperbarui', time: '3 jam lalu', read: true },
+  ]);
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   // Load user stats
   useEffect(() => {
@@ -36,6 +49,19 @@ export function Header({ onMenuClick }: HeaderProps) {
     loadStats();
   }, []);
 
+  // Dark mode
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', String(isDarkMode));
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -44,6 +70,9 @@ export function Header({ onMenuClick }: HeaderProps) {
       }
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowUserDropdown(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
       }
     };
 
@@ -195,7 +224,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           <div className="flex items-center gap-1.5 md:gap-3 ml-auto">
             {/* Current Date */}
             <div className="hidden lg:block text-right">
-              <p className="text-white/90 text-xs font-medium">Selasa, 3 Februari 2026</p>
+              <p className="text-white/90 text-xs font-medium">{new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
             </div>
 
             {/* Mobile Search Button */}
@@ -208,9 +237,72 @@ export function Header({ onMenuClick }: HeaderProps) {
             </button>
 
             {/* Notifications */}
-            <button className="relative p-2 text-white/90 hover:bg-white/10 rounded-lg transition-colors">
-              <Bell size={20} />
-              <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full ring-2 ring-green-600"></span>
+            <div className="relative" ref={notificationsRef}>
+              <button
+                onClick={() => { setShowNotifications(prev => !prev); setShowUserDropdown(false); }}
+                className="relative p-2 text-white/90 hover:bg-white/10 rounded-lg transition-colors"
+                aria-label="Notifikasi"
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full ring-2 ring-green-600 text-white text-[9px] font-bold flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+                  <div className="px-4 py-2.5 flex items-center justify-between" style={{ backgroundColor: '#059669' }}>
+                    <div className="flex items-center gap-2">
+                      <Bell size={15} className="text-white" />
+                      <span className="text-white font-semibold text-sm">Notifikasi</span>
+                      {unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">{unreadCount} baru</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {unreadCount > 0 && (
+                        <button onClick={markAllRead} className="text-white/80 hover:text-white text-xs">Tandai dibaca</button>
+                      )}
+                      <button onClick={() => setShowNotifications(false)} className="text-white/80 hover:text-white"><X size={14} /></button>
+                    </div>
+                  </div>
+                  <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                        <Bell size={28} className="mx-auto mb-2 text-gray-300" />
+                        <p>Tidak ada notifikasi</p>
+                      </div>
+                    ) : (
+                      notifications.map(n => (
+                        <div key={n.id} className={`px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer ${!n.read ? 'bg-emerald-50/40' : ''}`}>
+                          <div className="flex gap-3">
+                            <span className="text-base shrink-0 mt-0.5">{n.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-xs leading-snug ${!n.read ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>{n.message}</p>
+                              <p className="text-xs text-gray-400 mt-0.5">{n.time}</p>
+                            </div>
+                            {!n.read && <span className="w-2 h-2 bg-emerald-500 rounded-full shrink-0 mt-1.5"></span>}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="px-4 py-2 border-t border-gray-100 bg-gray-50 text-center">
+                    <button className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">Lihat semua notifikasi</button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 text-white/90 hover:bg-white/10 rounded-lg transition-colors"
+              aria-label={isDarkMode ? 'Mode Terang' : 'Mode Gelap'}
+              title={isDarkMode ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+            >
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
             {/* User Dropdown */}
@@ -220,11 +312,11 @@ export function Header({ onMenuClick }: HeaderProps) {
                 className="flex items-center gap-2 px-2 md:px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
               >
                 <div className="h-8 w-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">A</span>
+                  <span className="text-white font-semibold text-sm">{(user?.namaLengkap || user?.email || 'U').charAt(0).toUpperCase()}</span>
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-white text-sm font-medium leading-tight">Administrator</p>
-                  <p className="text-green-100 text-xs">Admin</p>
+                  <p className="text-white text-sm font-medium leading-tight">{user?.namaLengkap || 'User'}</p>
+                  <p className="text-green-100 text-xs capitalize">{user?.role || 'Admin'}</p>
                 </div>
                 <ChevronDown size={16} className={`text-white transition-transform hidden sm:block ${showUserDropdown ? 'rotate-180' : ''}`} />
               </button>
@@ -236,11 +328,11 @@ export function Header({ onMenuClick }: HeaderProps) {
                   <div className="px-5 py-3" style={{ backgroundColor: '#059669' }}>
                     <div className="flex items-center gap-3">
                       <div className="h-14 w-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/30">
-                        <span className="text-white font-bold text-xl">A</span>
+                        <span className="text-white font-bold text-xl">{(user?.namaLengkap || user?.email || 'U').charAt(0).toUpperCase()}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white font-semibold text-sm truncate">Administrator</p>
-                        <p className="text-green-100 text-xs truncate">{user?.email || 'admin@kthbtm.com'}</p>
+                        <p className="text-white font-semibold text-sm truncate">{user?.namaLengkap || 'User'}</p>
+                        <p className="text-green-100 text-xs truncate">{user?.email || ''}</p>
                         <div className="flex items-center gap-1 mt-0.5">
                           <div className="h-1.5 w-1.5 bg-green-300 rounded-full"></div>
                           <span className="text-green-100 text-xs">Member sejak Juli 2024</span>
@@ -288,25 +380,28 @@ export function Header({ onMenuClick }: HeaderProps) {
                       <span>Ubah Password</span>
                     </button>
                     <button
-                      onClick={() => {
-                        setShowUserDropdown(false);
-                      }}
+                      onClick={() => { setShowUserDropdown(false); setShowNotifications(true); }}
                       className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <Bell size={16} className="text-gray-500" />
                       <div className="flex items-center justify-between flex-1">
                         <span>Notifikasi</span>
-                        <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">3</span>
+                        {unreadCount > 0 && (
+                          <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">{unreadCount}</span>
+                        )}
                       </div>
                     </button>
                     <button
-                      onClick={() => {
-                        setShowUserDropdown(false);
-                      }}
+                      onClick={() => { toggleDarkMode(); setShowUserDropdown(false); }}
                       className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
-                      <Moon size={16} className="text-gray-500" />
-                      <span>Mode Gelap</span>
+                      {isDarkMode ? <Sun size={16} className="text-yellow-500" /> : <Moon size={16} className="text-gray-500" />}
+                      <div className="flex items-center justify-between flex-1">
+                        <span>{isDarkMode ? 'Mode Terang' : 'Mode Gelap'}</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                          isDarkMode ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'
+                        }`}>{isDarkMode ? 'Aktif' : 'Off'}</span>
+                      </div>
                     </button>
                     <button
                       onClick={() => {

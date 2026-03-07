@@ -18,7 +18,9 @@ export default function PnbpPage() {
   
   // Filters
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
+  const [metodePembayaranFilter, setMetodePembayaranFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   
   // Pagination
@@ -34,7 +36,7 @@ export default function PnbpPage() {
 
   useEffect(() => {
     loadData();
-  }, [selectedYear, statusFilter, currentPage]);
+  }, [selectedYear, selectedMonth, statusFilter, currentPage]);
 
   const loadData = async () => {
     try {
@@ -46,7 +48,9 @@ export default function PnbpPage() {
           page: currentPage,
           limit: itemsPerPage,
           tahun: selectedYear,
+          bulan: selectedMonth || undefined,
           statusPembayaran: statusFilter,
+          metodePembayaran: metodePembayaranFilter || undefined,
           search: searchQuery,
         }),
       ]);
@@ -150,7 +154,9 @@ export default function PnbpPage() {
 
   const handleResetFilter = () => {
     setSelectedYear(new Date().getFullYear());
+    setSelectedMonth(0);
     setStatusFilter('');
+    setMetodePembayaranFilter('');
     setSearchQuery('');
     setCurrentPage(1);
   };
@@ -187,13 +193,13 @@ export default function PnbpPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">PNBP (Penerimaan Negara Bukan Pajak)</h1>
-          <p className="text-gray-600 text-sm mt-0.5">Kelola tagihan dan pembayaran PNBP lahan KHDPK</p>
+          <h1 className="text-lg font-bold text-gray-900">PNBP (Penerimaan Negara Bukan Pajak)</h1>
+          <p className="text-sm text-gray-600 mt-0.5">Kelola tagihan dan pembayaran PNBP lahan KHDPK</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={handleExportExcel}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-white rounded-md text-sm font-medium transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-white rounded-md text-xs font-medium transition-colors"
             style={{ backgroundColor: '#0284C7' }}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0369A1'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0284C7'}
@@ -201,10 +207,22 @@ export default function PnbpPage() {
             <Download size={16} />
             Export Excel
           </button>
+          <button
+            onClick={() => setIsFilterOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors text-xs font-medium"
+          >
+            <Filter size={16} />
+            <span className="hidden sm:inline">Filter</span>
+            {(selectedMonth > 0 || statusFilter || metodePembayaranFilter) && (
+              <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
+                {[selectedMonth > 0, statusFilter, metodePembayaranFilter].filter(Boolean).length}
+              </span>
+            )}
+          </button>
           {canManagePnbp && (
             <button
               onClick={handleGenerate}
-              className="flex items-center gap-1.5 text-white px-3 py-1.5 rounded-md transition-colors text-sm font-medium"
+              className="flex items-center gap-1.5 text-white px-3 py-1.5 rounded-md transition-colors text-xs font-medium"
               style={{ backgroundColor: '#059669' }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#047857'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#059669'}
@@ -318,53 +336,6 @@ export default function PnbpPage() {
         </div>
       </div>
 
-      {/* Filter & Actions Bar */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-          {/* Search bar */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input
-              type="search"
-              placeholder="Cari kode lahan atau nama anggota..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setCurrentPage(1);
-                  loadData();
-                }
-              }}
-              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-            />
-          </div>
-          
-          {/* Action buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setIsFilterOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors text-sm font-medium"
-            >
-              <Filter size={16} />
-              <span className="hidden sm:inline">Filter</span>
-              {statusFilter && (
-                <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
-                  1
-                </span>
-              )}
-            </button>
-            
-            <button
-              onClick={handleExportExcel}
-              className="flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors text-sm font-medium"
-            >
-              <Download size={16} />
-              <span className="hidden sm:inline">Export</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Filter Drawer */}
       <FilterDrawer
         isOpen={isFilterOpen}
@@ -372,47 +343,68 @@ export default function PnbpPage() {
         onReset={handleResetFilter}
         title="Filter PNBP"
       >
-        <FilterField label="Pencarian">
-          <FilterInput
-            type="search"
-            placeholder="Cari kode lahan atau nama anggota..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </FilterField>
-
-        <FilterDivider label="Periode" />
-
-        <FilterField label="Tahun">
-          <FilterSelect
-            value={selectedYear.toString()}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            options={[
-              { value: '2023', label: '2023' },
-              { value: '2024', label: '2024' },
-              { value: '2025', label: '2025' },
-              { value: '2026', label: '2026' },
-              { value: '2027', label: '2027' },
-            ]}
-            placeholder="Pilih Tahun"
-          />
-        </FilterField>
-
-        <FilterDivider label="Status" />
-
-        <FilterField label="Status Pembayaran">
-          <FilterSelect
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            options={[
-              { value: 'belum_bayar', label: 'Belum Bayar' },
-              { value: 'lunas', label: 'Lunas' },
-              { value: 'terlambat', label: 'Terlambat' },
-            ]}
-            placeholder="Semua Status"
-          />
-        </FilterField>
-      </FilterDrawer>
+          <FilterField label="Pencarian">
+            <FilterInput
+              type="search"
+              placeholder="Cari kode lahan atau nama anggota..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </FilterField>
+          <FilterDivider label="Periode" />
+          <FilterField label="Tahun">
+            <FilterSelect
+              value={selectedYear.toString()}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              options={[
+                { value: '2023', label: '2023' },
+                { value: '2024', label: '2024' },
+                { value: '2025', label: '2025' },
+                { value: '2026', label: '2026' },
+                { value: '2027', label: '2027' },
+              ]}
+              placeholder="Pilih Tahun"
+            />
+          </FilterField>
+          <FilterField label="Bulan">
+            <FilterSelect
+              value={selectedMonth.toString()}
+              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+              options={Array.from({ length: 12 }, (_, i) => ({
+                value: (i + 1).toString(),
+                label: new Date(2024, i).toLocaleString('id-ID', { month: 'long' })
+              }))}
+              placeholder="Semua Bulan"
+            />
+          </FilterField>
+          <FilterDivider label="Status" />
+          <FilterField label="Status Pembayaran">
+            <FilterSelect
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              options={[
+                { value: 'belum_bayar', label: '⏳ Belum Bayar' },
+                { value: 'lunas', label: '✅ Lunas' },
+                { value: 'terlambat', label: '🔴 Terlambat' },
+              ]}
+              placeholder="Semua Status"
+            />
+          </FilterField>
+          <FilterDivider label="Pembayaran" />
+          <FilterField label="Metode Pembayaran">
+            <FilterSelect
+              value={metodePembayaranFilter}
+              onChange={(e) => setMetodePembayaranFilter(e.target.value)}
+              options={[
+                { value: 'transfer', label: '🏦 Transfer Bank' },
+                { value: 'tunai', label: '💵 Tunai / Cash' },
+                { value: 'virtual_account', label: '💻 Virtual Account' },
+                { value: 'setor_tunai', label: '🏧 Setor Tunai' },
+              ]}
+              placeholder="Semua Metode"
+            />
+          </FilterField>
+        </FilterDrawer>
 
       {/* Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Plus, Filter, Clock, Download } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Calendar, Plus, Filter, Clock, Download, Search } from 'lucide-react';
 import keuanganService, { Keuangan, KeuanganStatistics } from '../../services/keuangan.service';
 import { authService } from '../../services/auth.service';
 import { KeuanganFormModal, KeuanganVerifyModal } from '../../components/keuangan';
 import { exportToExcel, formatCurrency, formatDate } from '../../lib/export';
 import { Pagination } from '@/components/ui/Pagination';
 import { MainLayout } from '../../components/layout/MainLayout';
+import { FilterDrawer, FilterField, FilterSelect, FilterInput, FilterDivider } from '@/components/ui/FilterDrawer';
 
 export default function KeuanganPage() {
   const [user, setUser] = useState<any>(null);
@@ -24,6 +25,9 @@ export default function KeuanganPage() {
   const [selectedMonth, setSelectedMonth] = useState<number>(0); // 0 = all months
   const [jenisFilter, setJenisFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [kategoriFilter, setKategoriFilter] = useState('');
+  const [statusVerifikasiFilter, setStatusVerifikasiFilter] = useState('');
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -61,6 +65,8 @@ export default function KeuanganPage() {
           bulan: selectedMonth || undefined,
           jenis: jenisFilter,
           search: searchQuery,
+          kategori: kategoriFilter || undefined,
+          statusVerifikasi: statusVerifikasiFilter || undefined,
         }),
       ]);
 
@@ -203,13 +209,13 @@ export default function KeuanganPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Keuangan</h1>
-          <p className="text-gray-600 text-sm mt-0.5">Kelola transaksi pemasukan dan pengeluaran KTH</p>
+          <h1 className="text-lg font-bold text-gray-900">Keuangan</h1>
+          <p className="text-sm text-gray-600 mt-0.5">Kelola transaksi pemasukan dan pengeluaran KTH</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleExportExcel}
-            className="flex items-center gap-1.5 text-white px-3 py-1.5 rounded-md transition-colors text-sm font-medium"
+            className="flex items-center gap-1.5 text-white px-3 py-1.5 rounded-md transition-colors text-xs font-medium"
             style={{ backgroundColor: '#0284C7' }}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0369A1'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0284C7'}
@@ -217,13 +223,25 @@ export default function KeuanganPage() {
             <Download size={16} />
             Export Excel
           </button>
+          <button
+            onClick={() => setIsFilterOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors text-xs font-medium"
+          >
+            <Filter size={16} />
+            <span className="hidden sm:inline">Filter</span>
+            {(selectedMonth > 0 || jenisFilter || kategoriFilter || statusVerifikasiFilter) && (
+              <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
+                {[selectedMonth > 0, jenisFilter, kategoriFilter, statusVerifikasiFilter].filter(Boolean).length}
+              </span>
+            )}
+          </button>
           {canManageKeuangan && (
             <button
               onClick={() => {
                 setSelectedKeuangan(undefined);
                 setShowFormModal(true);
               }}
-              className="flex items-center gap-1.5 text-white px-3 py-1.5 rounded-md transition-colors text-sm font-medium"
+              className="flex items-center gap-1.5 text-white px-3 py-1.5 rounded-md transition-colors text-xs font-medium"
               style={{ backgroundColor: '#059669' }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#047857'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#059669'}
@@ -339,75 +357,81 @@ export default function KeuanganPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Calendar size={16} className="inline mr-1" />
-              Tahun
-            </label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {[2023, 2024, 2025, 2026, 2027].map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Bulan
-            </label>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value={0}>Semua Bulan</option>
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {new Date(2000, i).toLocaleString('id-ID', { month: 'long' })}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Filter size={16} className="inline mr-1" />
-              Jenis Transaksi
-            </label>
-            <select
-              value={jenisFilter}
-              onChange={(e) => setJenisFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="">Semua Jenis</option>
-              <option value="pemasukan">Pemasukan</option>
-              <option value="pengeluaran">Pengeluaran</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Cari
-            </label>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Nomor, kategori..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-        </div>
-      </div>
+      {/* Filter Drawer */}
+      <FilterDrawer
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onReset={() => { setSelectedYear(new Date().getFullYear()); setSelectedMonth(0); setJenisFilter(''); setKategoriFilter(''); setStatusVerifikasiFilter(''); setSearchQuery(''); }}
+        title="Filter Keuangan"
+      >
+        <FilterField label="Pencarian">
+          <FilterInput
+            type="search"
+            placeholder="Cari nomor transaksi atau kategori..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </FilterField>
+        <FilterDivider label="Periode" />
+        <FilterField label="Tahun">
+          <FilterSelect
+            value={String(selectedYear)}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            options={[2023,2024,2025,2026,2027].map(y => ({ value: String(y), label: String(y) }))}
+            placeholder="Pilih Tahun"
+          />
+        </FilterField>
+        <FilterField label="Bulan">
+          <FilterSelect
+            value={String(selectedMonth)}
+            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            options={Array.from({ length: 12 }, (_, i) => ({
+              value: String(i + 1),
+              label: new Date(2000, i).toLocaleString('id-ID', { month: 'long' }),
+            }))}
+            placeholder="Semua Bulan"
+          />
+        </FilterField>
+        <FilterDivider label="Kriteria" />
+        <FilterField label="Jenis Transaksi">
+          <FilterSelect
+            value={jenisFilter}
+            onChange={(e) => setJenisFilter(e.target.value)}
+            options={[
+              { value: 'pemasukan', label: '📈 Pemasukan' },
+              { value: 'pengeluaran', label: '📉 Pengeluaran' },
+            ]}
+            placeholder="Semua Jenis"
+          />
+        </FilterField>
+        <FilterField label="Kategori">
+          <FilterSelect
+            value={kategoriFilter}
+            onChange={(e) => setKategoriFilter(e.target.value)}
+            options={[
+              { value: 'Iuran Anggota', label: 'Iuran Anggota' },
+              { value: 'PNBP', label: 'PNBP' },
+              { value: 'Operasional', label: 'Operasional' },
+              { value: 'Kegiatan', label: 'Kegiatan' },
+              { value: 'Administrasi', label: 'Administrasi' },
+              { value: 'Lainnya', label: 'Lainnya' },
+            ]}
+            placeholder="Semua Kategori"
+          />
+        </FilterField>
+        <FilterField label="Status Verifikasi">
+          <FilterSelect
+            value={statusVerifikasiFilter}
+            onChange={(e) => setStatusVerifikasiFilter(e.target.value)}
+            options={[
+              { value: 'pending', label: '⏳ Menunggu Verifikasi' },
+              { value: 'verified', label: '✅ Terverifikasi' },
+              { value: 'rejected', label: '❌ Ditolak' },
+            ]}
+            placeholder="Semua Status"
+          />
+        </FilterField>
+      </FilterDrawer>
 
       {/* Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -452,25 +476,25 @@ export default function KeuanganPage() {
               ) : (
                 transactions.map((trx) => (
                   <tr key={trx.id} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                       {formatDate(trx.tanggalTransaksi)}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-900">
                       {trx.nomorTransaksi}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">
                       {getJenisBadge(trx.jenisTransaksi)}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                       {trx.kategori}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm font-semibold text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs font-semibold text-gray-900">
                       {formatCurrency(trx.jumlah)}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">
                       {getStatusBadge(trx.statusVerifikasi)}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs">
                       {canManageKeuangan && (
                         <div className="flex gap-2">
                           <button

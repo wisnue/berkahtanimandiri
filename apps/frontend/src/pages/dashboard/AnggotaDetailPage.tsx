@@ -299,7 +299,7 @@ export function AnggotaDetailPage() {
               <ArrowLeft size={20} />
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Detail Anggota</h1>
+              <h1 className="text-lg font-bold text-gray-900">Detail Anggota</h1>
               <p className="text-sm text-gray-600 mt-1">Informasi lengkap profil anggota</p>
             </div>
           </div>

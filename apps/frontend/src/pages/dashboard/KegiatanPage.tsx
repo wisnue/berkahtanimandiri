@@ -32,10 +32,11 @@ export default function KegiatanPage() {
   
   // Filter drawer state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [lokasiFilter, setLokasiFilter] = useState('');
 
   useEffect(() => {
     loadData();
-  }, [selectedYear, selectedMonth, jenisFilter, statusFilter, currentPage]);
+  }, [selectedYear, selectedMonth, jenisFilter, statusFilter, lokasiFilter, currentPage]);
 
   const loadData = async () => {
     try {
@@ -50,6 +51,7 @@ export default function KegiatanPage() {
           bulan: selectedMonth || undefined,
           jenis: jenisFilter,
           status: statusFilter,
+          lokasi: lokasiFilter || undefined,
           search: searchQuery,
         }),
       ]);
@@ -122,6 +124,7 @@ export default function KegiatanPage() {
     setSelectedMonth(0);
     setJenisFilter('');
     setStatusFilter('');
+    setLokasiFilter('');
     setSearchQuery('');
     setCurrentPage(1);
   };
@@ -183,13 +186,13 @@ export default function KegiatanPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Kegiatan KTH</h1>
-          <p className="text-gray-600">Kelola jadwal dan dokumentasi kegiatan KTH Berkah Tani Mandiri</p>
+          <h1 className="text-lg font-bold text-gray-900">Kegiatan KTH</h1>
+          <p className="text-sm text-gray-600 mt-0.5">Kelola jadwal dan dokumentasi kegiatan KTH Berkah Tani Mandiri</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={handleExportExcel}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-white rounded-md transition-colors text-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-white rounded-md transition-colors text-xs"
             style={{ backgroundColor: '#0284C7' }}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0369A1'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0284C7'}
@@ -197,10 +200,22 @@ export default function KegiatanPage() {
             <Download size={16} />
             Export Excel
           </button>
+          <button
+            onClick={() => setIsFilterOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors text-xs font-medium"
+          >
+            <Filter size={16} />
+            <span className="hidden sm:inline">Filter</span>
+            {(selectedMonth > 0 || jenisFilter || statusFilter || lokasiFilter) && (
+              <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
+                {[selectedMonth > 0, jenisFilter, statusFilter, lokasiFilter].filter(Boolean).length}
+              </span>
+            )}
+          </button>
           {canManageKegiatan && (
             <button
               onClick={handleCreate}
-              className="flex items-center gap-1.5 text-white px-3 py-1.5 rounded-md transition-colors text-sm"
+              className="flex items-center gap-1.5 text-white px-3 py-1.5 rounded-md transition-colors text-xs"
               style={{ backgroundColor: '#059669' }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#047857'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#059669'}
@@ -291,53 +306,6 @@ export default function KegiatanPage() {
         </div>
       </div>
 
-      {/* Filter & Actions Bar */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-          {/* Search bar */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input
-              type="search"
-              placeholder="Cari nama atau kode kegiatan..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setCurrentPage(1);
-                  loadData();
-                }
-              }}
-              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-            />
-          </div>
-          
-          {/* Action buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setIsFilterOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors text-sm font-medium"
-            >
-              <Filter size={16} />
-              <span className="hidden sm:inline">Filter</span>
-              {(selectedMonth > 0 || jenisFilter || statusFilter) && (
-                <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
-                  {[selectedMonth > 0, jenisFilter, statusFilter].filter(Boolean).length}
-                </span>
-              )}
-            </button>
-            
-            <button
-              onClick={handleExportExcel}
-              className="flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors text-sm font-medium"
-            >
-              <Download size={16} />
-              <span className="hidden sm:inline">Export</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Filter Drawer */}
       <FilterDrawer
         isOpen={isFilterOpen}
@@ -353,9 +321,7 @@ export default function KegiatanPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </FilterField>
-
         <FilterDivider label="Periode" />
-
         <FilterField label="Tahun">
           <FilterSelect
             value={selectedYear.toString()}
@@ -370,7 +336,6 @@ export default function KegiatanPage() {
             placeholder="Pilih Tahun"
           />
         </FilterField>
-
         <FilterField label="Bulan">
           <FilterSelect
             value={selectedMonth.toString()}
@@ -382,37 +347,43 @@ export default function KegiatanPage() {
             placeholder="Semua Bulan"
           />
         </FilterField>
-
         <FilterDivider label="Kriteria" />
-
         <FilterField label="Jenis Kegiatan">
           <FilterSelect
             value={jenisFilter}
             onChange={(e) => setJenisFilter(e.target.value)}
             options={[
-              { value: 'Rapat', label: 'Rapat' },
-              { value: 'Pelatihan', label: 'Pelatihan' },
-              { value: 'Penanaman', label: 'Penanaman' },
-              { value: 'Panen', label: 'Panen' },
-              { value: 'Pemeliharaan', label: 'Pemeliharaan' },
-              { value: 'Monitoring', label: 'Monitoring' },
+              { value: 'Rapat', label: 'Rapat / Musyawarah' },
+              { value: 'Pelatihan', label: 'Pelatihan / Workshop' },
+              { value: 'Penanaman', label: 'Penanaman / Rehabilitasi' },
+              { value: 'Panen', label: 'Panen / Pemungutan Hasil' },
+              { value: 'Pemeliharaan', label: 'Pemeliharaan Lahan' },
+              { value: 'Monitoring', label: 'Monitoring & Evaluasi' },
               { value: 'Lainnya', label: 'Lainnya' },
             ]}
             placeholder="Semua Jenis"
           />
         </FilterField>
-
-        <FilterField label="Status">
+        <FilterField label="Status Kegiatan">
           <FilterSelect
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             options={[
-              { value: 'rencana', label: 'Rencana' },
-              { value: 'berlangsung', label: 'Berlangsung' },
-              { value: 'selesai', label: 'Selesai' },
-              { value: 'batal', label: 'Batal' },
+              { value: 'rencana', label: '🗓️ Rencana' },
+              { value: 'berlangsung', label: '▶️ Berlangsung' },
+              { value: 'selesai', label: '✅ Selesai' },
+              { value: 'batal', label: '❌ Dibatalkan' },
             ]}
             placeholder="Semua Status"
+          />
+        </FilterField>
+        <FilterDivider label="Lokasi" />
+        <FilterField label="Lokasi Kegiatan">
+          <FilterInput
+            type="text"
+            placeholder="Cari lokasi kegiatan..."
+            value={lokasiFilter}
+            onChange={(e) => setLokasiFilter(e.target.value)}
           />
         </FilterField>
       </FilterDrawer>
@@ -460,7 +431,7 @@ export default function KegiatanPage() {
               ) : (
                 kegiatanList.map((kegiatan) => (
                   <tr key={kegiatan.id} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-900">
                       {kegiatan.kodeKegiatan}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">
@@ -469,19 +440,19 @@ export default function KegiatanPage() {
                         <div className="text-sm text-gray-500">PJ: {kegiatan.penanggungJawabNama}</div>
                       )}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                       {kegiatan.jenisKegiatan}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                       {formatDate(kegiatan.tanggalMulai)}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
                       {kegiatan.lokasiKegiatan || '-'}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">
                       {getStatusBadge(kegiatan.statusKegiatan)}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs">
                       {canManageKegiatan && (
                         <div className="flex gap-2">
                           <button

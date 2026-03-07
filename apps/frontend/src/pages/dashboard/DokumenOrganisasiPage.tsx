@@ -13,12 +13,15 @@ import {
   Trash2,
   Clock,
   Shield,
+  Filter,
+  Search,
 } from 'lucide-react';
 import dokumenOrganisasiService, {
   DokumenOrganisasi,
   DokumenOrganisasiStatistics,
 } from '@/services/dokumenOrganisasi.service';
 import { authService } from '@/services/auth.service';
+import { FilterDrawer, FilterField, FilterSelect, FilterInput, FilterDivider } from '@/components/ui/FilterDrawer';
 
 export default function DokumenOrganisasiPage() {
   const [user, setUser] = useState<any>(null);
@@ -45,6 +48,9 @@ export default function DokumenOrganisasiPage() {
   const [jenisDokumen, setJenisDokumen] = useState('');
   const [statusDokumen, setStatusDokumen] = useState('');
   const [search, setSearch] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [tanggalDari, setTanggalDari] = useState('');
+  const [tanggalSampai, setTanggalSampai] = useState('');
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -70,6 +76,8 @@ export default function DokumenOrganisasiPage() {
         search,
         jenisDokumen,
         statusDokumen,
+        tanggalDari: tanggalDari || undefined,
+        tanggalSampai: tanggalSampai || undefined,
       });
       if (res.success) {
         const data = res.data as any;
@@ -265,19 +273,47 @@ export default function DokumenOrganisasiPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <Shield className="h-6 w-6 text-blue-600" />
               Dokumen Organisasi
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-sm text-gray-600 mt-1">
               Kelola dokumen legal dan organisasi KTH
             </p>
           </div>
           {canUpload && (
-            <Button onClick={() => setShowUploadModal(true)} className="bg-blue-600 hover:bg-blue-700">
-              <Upload size={16} className="mr-2" />
-              Upload Dokumen
-            </Button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsFilterOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors text-xs font-medium"
+              >
+                <Filter size={16} />
+                <span className="hidden sm:inline">Filter</span>
+                {(jenisDokumen || statusDokumen || tanggalDari || tanggalSampai) && (
+                  <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
+                    {[jenisDokumen, statusDokumen, tanggalDari, tanggalSampai].filter(Boolean).length}
+                  </span>
+                )}
+              </button>
+              <Button onClick={() => setShowUploadModal(true)} className="bg-blue-600 hover:bg-blue-700">
+                <Upload size={16} className="mr-2" />
+                Upload Dokumen
+              </Button>
+            </div>
+          )}
+          {!canUpload && (
+            <button
+              onClick={() => setIsFilterOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors text-xs font-medium"
+            >
+              <Filter size={16} />
+              <span className="hidden sm:inline">Filter</span>
+              {(jenisDokumen || statusDokumen || tanggalDari || tanggalSampai) && (
+                <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
+                  {[jenisDokumen, statusDokumen, tanggalDari, tanggalSampai].filter(Boolean).length}
+                </span>
+              )}
+            </button>
           )}
         </div>
 
@@ -334,68 +370,72 @@ export default function DokumenOrganisasiPage() {
           </div>
         )}
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Jenis Dokumen
-                </label>
-                <select
-                  value={jenisDokumen}
-                  onChange={(e) => setJenisDokumen(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Semua Jenis</option>
-                  <option value="sk_pembentukan">SK Pembentukan KTH</option>
-                  <option value="ad_art">AD/ART</option>
-                  <option value="sk_pengurus">SK Pengurus</option>
-                  <option value="sk_khdpk">SK KHDPK</option>
-                  <option value="sk_perhutanan_sosial">SK Perhutanan Sosial</option>
-                  <option value="rekomendasi_dinas">Rekomendasi Dinas</option>
-                  <option value="nib">NIB</option>
-                  <option value="npwp_organisasi">NPWP Organisasi</option>
-                  <option value="sertifikat_lahan">Sertifikat Lahan</option>
-                  <option value="mou_kerjasama">MoU/PKS</option>
-                  <option value="lainnya">Lainnya</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  value={statusDokumen}
-                  onChange={(e) => setStatusDokumen(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Semua Status</option>
-                  <option value="aktif">Aktif</option>
-                  <option value="pending_verifikasi">Pending Verifikasi</option>
-                  <option value="kadaluarsa">Kadaluarsa</option>
-                  <option value="ditolak">Ditolak</option>
-                  <option value="diganti">Diganti</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Cari
-                </label>
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Cari judul atau nomor dokumen..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  onKeyDown={(e) => e.key === 'Enter' && loadData()}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Filter Drawer */}
+        <FilterDrawer
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          onReset={() => { setJenisDokumen(''); setStatusDokumen(''); setSearch(''); setTanggalDari(''); setTanggalSampai(''); }}
+          title="Filter Dokumen Organisasi"
+        >
+          <FilterField label="Pencarian">
+            <FilterInput
+              type="search"
+              placeholder="Cari judul atau nomor dokumen..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </FilterField>
+          <FilterField label="Jenis Dokumen">
+            <FilterSelect
+              value={jenisDokumen}
+              onChange={(e) => setJenisDokumen(e.target.value)}
+              options={[
+                { value: 'sk_pembentukan', label: 'SK Pembentukan KTH' },
+                { value: 'ad_art', label: 'AD/ART Organisasi' },
+                { value: 'sk_pengurus', label: 'SK Pengurus' },
+                { value: 'sk_khdpk', label: 'SK KHDPK' },
+                { value: 'sk_perhutanan_sosial', label: 'SK Perhutanan Sosial' },
+                { value: 'rekomendasi_dinas', label: 'Rekomendasi Dinas' },
+                { value: 'nib', label: 'NIB (Nomor Induk Berusaha)' },
+                { value: 'npwp_organisasi', label: 'NPWP Organisasi' },
+                { value: 'sertifikat_lahan', label: 'Sertifikat Lahan' },
+                { value: 'mou_kerjasama', label: 'MoU / PKS Kerjasama' },
+                { value: 'lainnya', label: 'Lainnya' },
+              ]}
+              placeholder="Semua Jenis"
+            />
+          </FilterField>
+          <FilterDivider label="Status" />
+          <FilterField label="Status Dokumen">
+            <FilterSelect
+              value={statusDokumen}
+              onChange={(e) => setStatusDokumen(e.target.value)}
+              options={[
+                { value: 'aktif', label: '✅ Aktif / Berlaku' },
+                { value: 'pending_verifikasi', label: '⏳ Pending Verifikasi' },
+                { value: 'kadaluarsa', label: '⚠️ Kadaluarsa' },
+                { value: 'ditolak', label: '❌ Ditolak' },
+                { value: 'diganti', label: '🔄 Sudah Diganti' },
+              ]}
+              placeholder="Semua Status"
+            />
+          </FilterField>
+          <FilterDivider label="Rentang Tanggal" />
+          <FilterField label="Tanggal Dokumen Dari">
+            <FilterInput
+              type="date"
+              value={tanggalDari}
+              onChange={(e) => setTanggalDari(e.target.value)}
+            />
+          </FilterField>
+          <FilterField label="Tanggal Dokumen Sampai">
+            <FilterInput
+              type="date"
+              value={tanggalSampai}
+              onChange={(e) => setTanggalSampai(e.target.value)}
+            />
+          </FilterField>
+        </FilterDrawer>
 
         {/* Documents Table */}
         <Card>
@@ -441,14 +481,14 @@ export default function DokumenOrganisasiPage() {
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-2">
                             <FileText className="h-5 w-5 text-gray-400" />
-                            <span className="text-sm font-medium text-gray-900">
+                            <span className="text-xs font-medium text-gray-900">
                               {getJenisDokumenLabel(doc.jenisDokumen)}
                             </span>
                           </div>
                         </td>
                         <td className="px-4 py-4">
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{doc.judulDokumen}</p>
+                            <p className="text-xs font-medium text-gray-900">{doc.judulDokumen}</p>
                             {doc.nomorDokumen && (
                               <p className="text-xs text-gray-500">{doc.nomorDokumen}</p>
                             )}
@@ -458,7 +498,7 @@ export default function DokumenOrganisasiPage() {
                           </div>
                         </td>
                         <td className="px-4 py-4">
-                          <div className="text-sm">
+                          <div className="text-xs">
                             <p className="text-gray-900">
                               <Calendar size={12} className="inline mr-1" />
                               {formatDate(doc.tanggalDokumen)}

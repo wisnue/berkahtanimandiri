@@ -233,8 +233,8 @@ export default function ProfilePage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pengaturan Akun</h1>
-          <p className="text-gray-600 mt-1">Kelola profil dan preferensi akun Anda</p>
+          <h1 className="text-lg font-bold text-gray-900">Pengaturan Akun</h1>
+          <p className="text-sm text-gray-600 mt-1">Kelola profil dan preferensi akun Anda</p>
         </div>
 
         {/* Profile Summary Card */}

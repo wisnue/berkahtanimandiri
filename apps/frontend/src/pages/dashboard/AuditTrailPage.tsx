@@ -96,63 +96,30 @@ export default function AuditTrailPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <Shield className="h-6 w-6 text-indigo-600" />
               Audit Trail
             </h1>
-            <p className="text-gray-600 mt-1">Riwayat aktivitas sistem untuk audit compliance</p>
+            <p className="text-sm text-gray-600 mt-1">Riwayat aktivitas sistem untuk audit compliance</p>
           </div>
           <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
             <Download size={16} />
             Export CSV
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => setIsFilterOpen(true)}
+            className="flex items-center gap-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+          >
+            <Filter size={16} />
+            <span className="hidden sm:inline">Filter</span>
+            {(filters.tableName || filters.action || filters.startDate || filters.endDate || filters.ipAddress) && (
+              <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
+                {[filters.tableName, filters.action, filters.startDate, filters.endDate, filters.ipAddress].filter(Boolean).length}
+              </span>
+            )}
+          </Button>
         </div>
-
-        {/* Filter & Actions Bar */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-              {/* Search bar */}
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  type="search"
-                  placeholder="Cari berdasarkan deskripsi atau user..."
-                  value={filters.search || ''}
-                  onChange={(e) => setFilters({ ...filters, search: e.target.value || undefined, page: 1 })}
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                />
-              </div>
-              
-              {/* Action buttons */}
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsFilterOpen(true)}
-                  className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                >
-                  <Filter size={16} />
-                  <span className="hidden sm:inline ml-2">Filter</span>
-                  {(filters.tableName || filters.action || filters.startDate || filters.endDate || filters.ipAddress) && (
-                    <span className="ml-2 px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
-                      {[filters.tableName, filters.action, filters.startDate, filters.endDate, filters.ipAddress].filter(Boolean).length}
-                    </span>
-                  )}
-                </Button>
-                
-                <Button
-                  size="sm"
-                  onClick={handleExport}
-                  className="bg-sky-600 hover:bg-sky-700"
-                >
-                  <Download size={16} />
-                  <span className="hidden sm:inline ml-2">Export CSV</span>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Filter Drawer */}
         <FilterDrawer
@@ -169,7 +136,6 @@ export default function AuditTrailPage() {
               onChange={(e) => setFilters({ ...filters, search: e.target.value || undefined, page: 1 })}
             />
           </FilterField>
-
           <FilterDivider label="Kriteria" />
 
           <FilterField label="Tabel / Entity">
@@ -284,7 +250,7 @@ export default function AuditTrailPage() {
                   ) : (
                     entries.map((entry) => (
                       <tr key={entry.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm text-gray-900">
+                        <td className="px-4 py-3 text-xs text-gray-900">
                           <div className="flex items-center gap-1">
                             <Calendar size={14} className="text-gray-400" />
                             {new Date(entry.createdAt).toLocaleDateString('id-ID', {
@@ -296,30 +262,30 @@ export default function AuditTrailPage() {
                             })}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
+                        <td className="px-4 py-3 text-xs text-gray-900">
                           <div className="flex items-center gap-1">
                             <User size={14} className="text-gray-400" />
                             {entry.userName || entry.userId}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm">
+                        <td className="px-4 py-3 text-xs">
                           <div className="flex items-center gap-1">
                             <Database size={14} className="text-gray-400" />
                             {getTableDisplayName(entry.tableName)}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm">
+                        <td className="px-4 py-3 text-xs">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getActionBadgeColor(entry.action)}`}>
                             {entry.action}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
+                        <td className="px-4 py-3 text-xs text-gray-600">
                           {entry.description || '-'}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
+                        <td className="px-4 py-3 text-xs text-gray-500">
                           {entry.ipAddress || '-'}
                         </td>
-                        <td className="px-4 py-3 text-sm">
+                        <td className="px-4 py-3 text-xs">
                           <button
                             onClick={() => {
                               setSelectedEntry(entry);

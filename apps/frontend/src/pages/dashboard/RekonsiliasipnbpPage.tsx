@@ -80,11 +80,11 @@ export default function PnbpReconciliationPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <GitCompare className="h-6 w-6 text-purple-600" />
               Rekonsiliasi PNBP
             </h1>
-            <p className="text-gray-600 mt-1">Perbandingan data PNBP dengan Keuangan</p>
+            <p className="text-sm text-gray-600 mt-1">Perbandingan data PNBP dengan Keuangan</p>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Tahun</label>

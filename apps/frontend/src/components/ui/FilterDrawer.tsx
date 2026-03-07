@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { X, Filter } from 'lucide-react';
 import { Button } from './button';
 
@@ -59,20 +60,18 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  return ReactDOM.createPortal(
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black transition-opacity duration-300 z-40 ${
-          isOpen ? 'opacity-50' : 'opacity-0'
-        }`}
-        style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
+        style={{ position: 'fixed', inset: 0, zIndex: 9998, backgroundColor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto' }}
       />
 
       {/* Drawer Panel */}
       <div
         ref={drawerRef}
-        className={`fixed inset-y-0 right-0 w-full sm:w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 flex flex-col ${
+        style={{ position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 9999, width: '100%', maxWidth: '24rem' }}
+        className={`bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         role="dialog"
@@ -135,7 +134,8 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
           </Button>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };
 

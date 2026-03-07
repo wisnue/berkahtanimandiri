@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Package, TrendingDown, TrendingUp, AlertTriangle, Calendar, Plus, Filter, Download } from 'lucide-react';
+import { Package, TrendingDown, TrendingUp, AlertTriangle, Calendar, Plus, Filter, Download, Search } from 'lucide-react';
 import asetService, { Aset, AsetStatistics } from '../../services/aset.service';
 import { authService } from '../../services/auth.service';
 import { AsetFormModal } from '../../components/aset';
 import { exportToExcel, formatCurrency, formatDate } from '../../lib/export';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { Pagination } from '@/components/ui/Pagination';
+import { FilterDrawer, FilterField, FilterSelect, FilterInput, FilterDivider } from '@/components/ui/FilterDrawer';
 
 export default function AsetPage() {
   const [user, setUser] = useState<any>(null);
@@ -22,6 +23,7 @@ export default function AsetPage() {
   const [selectedKategori, setSelectedKategori] = useState('');
   const [selectedKondisi, setSelectedKondisi] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -174,13 +176,13 @@ export default function AsetPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Aset KTH</h1>
-          <p className="text-gray-600 text-sm mt-0.5">Inventaris dan manajemen aset KTH Berkah Tani Mandiri</p>
+          <h1 className="text-lg font-bold text-gray-900">Aset KTH</h1>
+          <p className="text-sm text-gray-600 mt-0.5">Inventaris dan manajemen aset KTH Berkah Tani Mandiri</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={handleExportExcel}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-white rounded-md text-sm transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-white rounded-md text-xs transition-colors"
             style={{ backgroundColor: '#0284C7' }}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0369A1'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0284C7'}
@@ -188,13 +190,25 @@ export default function AsetPage() {
             <Download size={16} />
             Export Excel
           </button>
+          <button
+            onClick={() => setIsFilterOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors text-xs font-medium"
+          >
+            <Filter size={16} />
+            <span className="hidden sm:inline">Filter</span>
+            {(selectedYear > 0 || selectedKategori || selectedKondisi) && (
+              <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
+                {[selectedYear > 0, selectedKategori, selectedKondisi].filter(Boolean).length}
+              </span>
+            )}
+          </button>
           {canManageAset && (
             <button
               onClick={() => {
                 setSelectedAset(undefined);
                 setShowFormModal(true);
               }}
-              className="flex items-center gap-1.5 text-white px-3 py-1.5 rounded-md transition-colors text-sm"
+              className="flex items-center gap-1.5 text-white px-3 py-1.5 rounded-md transition-colors text-xs"
               style={{ backgroundColor: '#059669' }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#047857'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#059669'}
@@ -285,95 +299,58 @@ export default function AsetPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex items-center gap-2 mb-3">
-          <Filter size={20} className="text-gray-600" />
-          <h3 className="font-semibold text-gray-900">Filter</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tahun Perolehan
-            </label>
-            <select
-              value={selectedYear}
-              onChange={(e) => {
-                setSelectedYear(parseInt(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="0">Semua Tahun</option>
-              {[2023, 2024, 2025, 2026, 2027].map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Kategori
-            </label>
-            <select
-              value={selectedKategori}
-              onChange={(e) => {
-                setSelectedKategori(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Semua Kategori</option>
-              <option value="Kendaraan">Kendaraan</option>
-              <option value="Peralatan">Peralatan</option>
-              <option value="Elektronik">Elektronik</option>
-              <option value="Furniture">Furniture</option>
-              <option value="Bangunan">Bangunan</option>
-              <option value="Lainnya">Lainnya</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Kondisi
-            </label>
-            <select
-              value={selectedKondisi}
-              onChange={(e) => {
-                setSelectedKondisi(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Semua Kondisi</option>
-              <option value="baik">Baik</option>
-              <option value="rusak">Rusak</option>
-              <option value="hilang">Hilang</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cari
-            </label>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setCurrentPage(1);
-                  loadData();
-                }
-              }}
-              placeholder="Nama, kode, atau merk..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-      </div>
+      {/* Filter Drawer */}
+      <FilterDrawer
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onReset={() => { setSelectedYear(0); setSelectedKategori(''); setSelectedKondisi(''); setSearchQuery(''); setCurrentPage(1); }}
+        title="Filter Aset"
+      >
+        <FilterField label="Pencarian">
+          <FilterInput
+            type="search"
+            placeholder="Cari nama aset, kode, atau merk..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </FilterField>
+        <FilterField label="Tahun Perolehan">
+          <FilterSelect
+            value={String(selectedYear)}
+            onChange={(e) => { setSelectedYear(parseInt(e.target.value)); setCurrentPage(1); }}
+            options={[2023,2024,2025,2026,2027].map(y => ({ value: String(y), label: String(y) }))}
+            placeholder="Semua Tahun"
+          />
+        </FilterField>
+        <FilterDivider label="Klasifikasi" />
+        <FilterField label="Kategori Aset">
+          <FilterSelect
+            value={selectedKategori}
+            onChange={(e) => { setSelectedKategori(e.target.value); setCurrentPage(1); }}
+            options={[
+              { value: 'Kendaraan', label: 'Kendaraan' },
+              { value: 'Peralatan', label: 'Peralatan' },
+              { value: 'Elektronik', label: 'Elektronik' },
+              { value: 'Furniture', label: 'Furniture' },
+              { value: 'Bangunan', label: 'Bangunan' },
+              { value: 'Lainnya', label: 'Lainnya' },
+            ]}
+            placeholder="Semua Kategori"
+          />
+        </FilterField>
+        <FilterField label="Kondisi Aset">
+          <FilterSelect
+            value={selectedKondisi}
+            onChange={(e) => { setSelectedKondisi(e.target.value); setCurrentPage(1); }}
+            options={[
+              { value: 'baik', label: 'Baik' },
+              { value: 'rusak', label: 'Rusak (Perlu Perbaikan)' },
+              { value: 'hilang', label: 'Hilang / Tidak Ditemukan' },
+            ]}
+            placeholder="Semua Kondisi"
+          />
+        </FilterField>
+      </FilterDrawer>
 
       {/* Aset Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

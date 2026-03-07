@@ -200,11 +200,11 @@ export default function BukuKasPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <BookOpen className="h-6 w-6 text-green-600" />
               Buku Kas
             </h1>
-            <p className="text-gray-600 mt-1">Catatan general ledger keluar masuk kas</p>
+            <p className="text-sm text-gray-600 mt-1">Catatan general ledger keluar masuk kas</p>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
             <Button
@@ -215,24 +215,11 @@ export default function BukuKasPage() {
               <Download size={16} className="mr-2" />
               Export PDF
             </Button>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Saldo Kas Saat Ini</p>
-              <p className="text-2xl font-bold text-green-600 flex items-center gap-2">
-                <Wallet size={24} />
-                {formatCurrency(currentBalance)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Period Selector */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
               <div>
-                <label className="block text-sm font-medium mb-1">Tahun</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Tahun</label>
                 <select
-                  className="border rounded px-3 py-2 w-32"
+                  className="border rounded px-2 py-1 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   value={tahun}
                   onChange={(e) => setTahun(parseInt(e.target.value))}
                 >
@@ -242,9 +229,9 @@ export default function BukuKasPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Bulan</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Bulan</label>
                 <select
-                  className="border rounded px-3 py-2 w-40"
+                  className="border rounded px-2 py-1 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   value={bulan}
                   onChange={(e) => setBulan(parseInt(e.target.value))}
                 >
@@ -254,8 +241,15 @@ export default function BukuKasPage() {
                 </select>
               </div>
             </div>
-          </CardContent>
-        </Card>
+            <div className="text-right">
+              <p className="text-sm text-gray-600">Saldo Kas Saat Ini</p>
+              <p className="text-2xl font-bold text-green-600 flex items-center gap-2">
+                <Wallet size={24} />
+                {formatCurrency(currentBalance)}
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Summary Cards */}
         {report && (
@@ -382,29 +376,29 @@ export default function BukuKasPage() {
                       {/* Transaction Rows */}
                       {report.entries.map((entry, idx) => (
                         <tr key={idx} className={`hover:bg-gray-50 ${entry.saldo < 0 ? 'bg-red-50' : ''}`}>
-                          <td className="px-4 py-3 text-sm text-gray-900">
+                          <td className="px-4 py-3 text-xs text-gray-900">
                             {new Date(entry.tanggal).toLocaleDateString('id-ID', {
                               day: '2-digit',
                               month: 'short',
                               year: 'numeric'
                             })}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-900">
+                          <td className="px-4 py-3 text-xs text-gray-900">
                             {entry.nomorTransaksi}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-900">
+                          <td className="px-4 py-3 text-xs text-gray-900">
                             {entry.uraian}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
+                          <td className="px-4 py-3 text-xs text-gray-600">
                             {entry.kategori}
                           </td>
-                          <td className="px-4 py-3 text-sm text-right text-green-600 font-medium">
+                          <td className="px-4 py-3 text-xs text-right text-green-600 font-medium">
                             {entry.pemasukan > 0 ? formatCurrency(entry.pemasukan) : '-'}
                           </td>
-                          <td className="px-4 py-3 text-sm text-right text-red-600 font-medium">
+                          <td className="px-4 py-3 text-xs text-right text-red-600 font-medium">
                             {entry.pengeluaran > 0 ? formatCurrency(entry.pengeluaran) : '-'}
                           </td>
-                          <td className={`px-4 py-3 text-sm text-right font-semibold ${entry.saldo < 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                          <td className={`px-4 py-3 text-xs text-right font-semibold ${entry.saldo < 0 ? 'text-red-600' : 'text-gray-900'}`}>
                             {formatCurrency(entry.saldo)}
                           </td>
                         </tr>
