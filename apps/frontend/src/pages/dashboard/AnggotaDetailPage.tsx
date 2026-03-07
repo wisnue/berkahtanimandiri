@@ -9,7 +9,7 @@ import { ArrowLeft, Edit, Printer, User, MapPin, Phone, Briefcase, Calendar } fr
 import jsPDF from 'jspdf';
 import { useAuth } from '../../app/AuthContext';
 
-export function AnggotaDetailPage() {
+export default function AnggotaDetailPage() {
   const params = useParams();
   const id = params.id;
   const { user } = useAuth();

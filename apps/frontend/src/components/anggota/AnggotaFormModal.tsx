@@ -46,7 +46,7 @@ export function AnggotaFormModal({ mode, anggota, onClose, onSuccess }: AnggotaF
   useEffect(() => {
     if (mode === 'edit' && anggota) {
       setFormData({
-        noAnggota: anggota.noAnggota,
+        noAnggota: anggota.noAnggota || anggota.nomorAnggota || '',
         nik: anggota.nik,
         namaLengkap: anggota.namaLengkap,
         jenisKelamin: anggota.jenisKelamin,

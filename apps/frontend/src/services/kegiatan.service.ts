@@ -84,6 +84,7 @@ export interface GetKegiatanParams {
   status?: string;
   tahun?: number;
   bulan?: number;
+  lokasi?: string;
   search?: string;
 }
 

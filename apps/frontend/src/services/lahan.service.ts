@@ -11,11 +11,17 @@ export interface LahanKhdpk {
   lokasiLahan?: string;
   koordinatLat?: string;
   koordinatLong?: string;
+  /** @deprecated use koordinatLat/koordinatLong */
+  koordinat?: string;
   statusLegalitas: string;
+  /** display status alias */
+  statusLahan?: string;
   nomorSKKHDPK?: string;
   tanggalSK?: string;
   masaBerlakuSK?: string;
   tahunMulaiKelola: number;
+  /** display year alias */
+  tahunTanam?: number;
   kondisiLahan?: string;
   filePetaLahan?: string;
   fileSKKHDPK?: string;
@@ -31,6 +37,8 @@ export interface LahanListParams {
   limit?: number;
   search?: string;
   statusLegalitas?: string;
+  jenisTanaman?: string;
+  tahunTanam?: number;
   anggotaId?: string;
   sortOrder?: 'asc' | 'desc';
 }

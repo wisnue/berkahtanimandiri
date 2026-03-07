@@ -44,6 +44,8 @@ export interface GetDokumenOrganisasiParams {
   search?: string;
   jenisDokumen?: string;
   statusDokumen?: string;
+  tanggalDari?: string;
+  tanggalSampai?: string;
   sortOrder?: 'asc' | 'desc';
 }
 

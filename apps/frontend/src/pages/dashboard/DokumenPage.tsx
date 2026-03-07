@@ -109,7 +109,7 @@ export default function DokumenPage() {
         loadData(); // Reload data
         (e.target as HTMLFormElement).reset();
       } else {
-        alert('Gagal upload dokumen: ' + (response.error || 'Unknown error'));
+        alert('Gagal upload dokumen: ' + (response.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Upload error:', error);

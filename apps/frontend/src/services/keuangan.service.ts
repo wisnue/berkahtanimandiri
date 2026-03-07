@@ -67,6 +67,7 @@ export interface GetKeuanganParams {
   kategori?: string;
   bulan?: number;
   tahun?: number;
+  statusVerifikasi?: string;
   search?: string;
 }
 

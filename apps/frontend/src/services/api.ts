@@ -168,6 +168,30 @@ class ApiClient {
     });
   }
 
+  async postForm<T>(endpoint: string, data: FormData): Promise<ApiResponse<T>> {
+    const url = `${this.baseUrl}${endpoint}`;
+    await this.ensureToken();
+    const headers: Record<string, string> = {};
+    if (this.csrfToken) {
+      headers['x-csrf-token'] = this.csrfToken;
+    }
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: data,
+        headers,
+        credentials: 'include',
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        return { success: false, message: json.message || 'Terjadi kesalahan' };
+      }
+      return { success: true, data: json.data || json, message: json.message };
+    } catch (error) {
+      return { success: false, message: error instanceof Error ? error.message : 'Network error' };
+    }
+  }
+
   async put<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'PUT',

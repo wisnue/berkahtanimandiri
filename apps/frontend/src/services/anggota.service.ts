@@ -2,7 +2,9 @@ import { api, ApiResponse } from './api';
 
 export interface Anggota {
   id: string;
-  nomorAnggota: string; // ✅ Fixed: was noAnggota
+  nomorAnggota: string;
+  /** @deprecated use nomorAnggota */
+  noAnggota?: string;
   nik: string;
   namaLengkap: string;
   jenisKelamin: string;
@@ -16,10 +18,19 @@ export interface Anggota {
   kabupaten: string;
   provinsi: string;
   kodePos: string;
-  nomorTelepon?: string; // ✅ Fixed: was noTelepon
+  nomorTelepon?: string;
+  /** @deprecated use nomorTelepon */
+  noTelepon?: string;
+  noWhatsapp?: string;
   email?: string;
-  pendidikan?: string; // ✅ Fixed: was pendidikanTerakhir
+  pendidikan?: string;
+  /** @deprecated use pendidikan */
+  pendidikanTerakhir?: string;
   pekerjaan?: string;
+  namaBank?: string;
+  nomorRekening?: string;
+  atasNamaRekening?: string;
+  fotoAnggota?: string;
   statusAnggota: string;
   jabatanKTH?: string;
   nomorSKKeanggotaan?: string;
@@ -41,6 +52,8 @@ export interface AnggotaListParams {
   limit?: number;
   search?: string;
   status?: string;
+  jenisKelamin?: string;
+  pendidikan?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }

@@ -11,8 +11,7 @@ import {
   FileText,
   Settings,
   LogOut,
-  Menu,
-  X,
+  // Menu, X — reserved for mobile toggle
   ChevronLeft,
   ChevronRight,
   ChevronDown,

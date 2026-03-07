@@ -46,6 +46,7 @@ export interface GetAuditTrailParams {
   startDate?: string;
   endDate?: string;
   search?: string;
+  ipAddress?: string;
 }
 
 const auditTrailService = {

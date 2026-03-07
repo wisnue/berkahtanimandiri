@@ -1,1 +1,1 @@
-export { PnbpPage as default } from './PnbpPage';
+export { default as PnbpPage } from './PnbpPage';

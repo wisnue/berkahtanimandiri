@@ -90,13 +90,9 @@ const dokumenService = {
   },
 
   async create(data: CreateDokumenRequest | FormData) {
-    // If FormData, send directly for file upload
+    // If FormData, send as multipart for file upload
     if (data instanceof FormData) {
-      return api.post('/dokumen', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      return api.postForm('/dokumen', data);
     }
     // Otherwise, send as JSON
     return api.post('/dokumen', data);

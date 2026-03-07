@@ -53,7 +53,9 @@ export interface GetPnbpParams {
   limit?: number;
   search?: string;
   tahun?: number;
+  bulan?: number;
   statusPembayaran?: string;
+  metodePembayaran?: string;
 }
 
 const pnbpService = {
