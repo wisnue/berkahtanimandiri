@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { db } from '../db';
 import { users } from '../db/schema/users';
 import { eq } from 'drizzle-orm';
@@ -7,6 +8,10 @@ import * as twoFactorService from '../services/twoFactor.service';
 import * as passwordPolicyService from '../services/passwordPolicy.service';
 import { initSessionHistory } from '../middlewares/session.middleware';
 import * as loginAttemptsService from '../services/loginAttempts.service';
+import { emailService } from '../services/email.service';
+
+// In-memory store for reset tokens: token -> { userId, expiry }
+const resetTokenStore = new Map<string, { userId: string; expiry: number }>();
 
 export class AuthController {
   /**
@@ -750,6 +755,126 @@ export class AuthController {
       return res.status(500).json({
         success: false,
         message: 'Terjadi kesalahan saat mengecek status password',
+      });
+    }
+  }
+
+  /**
+   * Forgot Password - Send reset link to email
+   */
+  static async forgotPassword(req: Request, res: Response) {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email wajib diisi',
+        });
+      }
+
+      // Always return success to avoid email enumeration
+      const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+
+      if (user) {
+        // Generate secure token
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiry = Date.now() + 60 * 60 * 1000; // 1 hour
+        resetTokenStore.set(token, { userId: user.id, expiry });
+
+        // Build reset URL
+        const appUrl = process.env.APP_URL || process.env.CORS_ORIGIN?.split(',')[0] || 'http://localhost:5173';
+        const resetUrl = `${appUrl}/reset-password?token=${token}`;
+
+        // Send email if configured
+        await emailService.sendEmail({
+          to: email,
+          subject: 'Reset Password - KTH Berkah Tani Mandiri',
+          html: `
+            <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+              <h2 style="color: #16a34a;">Reset Password</h2>
+              <p>Halo <strong>${user.fullName}</strong>,</p>
+              <p>Kami menerima permintaan reset password untuk akun Anda.</p>
+              <p>Klik tombol di bawah untuk membuat password baru. Link ini berlaku selama <strong>1 jam</strong>.</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}"
+                   style="background: #16a34a; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+                  Reset Password
+                </a>
+              </div>
+              <p style="color: #666; font-size: 13px;">Jika Anda tidak meminta reset password, abaikan email ini.</p>
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+              <p style="color: #999; font-size: 12px;">KTH Berkah Tani Mandiri</p>
+            </div>
+          `,
+        });
+      }
+
+      // Always return the same message
+      return res.status(200).json({
+        success: true,
+        message: 'Jika email terdaftar, link reset password telah dikirim. Silakan cek inbox (dan folder spam) Anda.',
+      });
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Terjadi kesalahan. Silakan coba lagi.',
+      });
+    }
+  }
+
+  /**
+   * Reset Password - Set new password using token
+   */
+  static async resetPassword(req: Request, res: Response) {
+    try {
+      const { token, password } = req.body;
+
+      if (!token || !password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Token dan password baru wajib diisi',
+        });
+      }
+
+      if (password.length < 8) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password minimal 8 karakter',
+        });
+      }
+
+      const entry = resetTokenStore.get(token);
+
+      if (!entry || Date.now() > entry.expiry) {
+        resetTokenStore.delete(token);
+        return res.status(400).json({
+          success: false,
+          message: 'Link reset password tidak valid atau sudah kadaluarsa. Silakan minta link baru.',
+        });
+      }
+
+      // Hash new password
+      const hashed = await bcrypt.hash(password, 10);
+
+      await db
+        .update(users)
+        .set({ password: hashed, updatedAt: new Date() })
+        .where(eq(users.id, entry.userId));
+
+      // Invalidate the token
+      resetTokenStore.delete(token);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Password berhasil diubah. Silakan login dengan password baru.',
+      });
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Terjadi kesalahan. Silakan coba lagi.',
       });
     }
   }

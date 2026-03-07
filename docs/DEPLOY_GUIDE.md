@@ -27,14 +27,14 @@ Browser  ──►  Vercel  (Frontend React/Vite)
 Jika belum punya repository GitHub:
 
 1. Buka github.com → klik **New** (tombol hijau)
-2. Beri nama `kth-btm` → klik **Create repository**
+2. Beri nama `berkahtanimandiri` → klik **Create repository**
 3. Di terminal VS Code, jalankan perintah berikut satu per satu:
 
 ```bash
 git init
 git add .
 git commit -m "initial commit"
-git remote add origin https://github.com/NAMA_KAMU/kth-btm.git
+git remote add origin https://github.com/NAMA_KAMU/berkahtanimandiri.git
 git push -u origin main
 ```
 
@@ -46,7 +46,7 @@ git push -u origin main
 
 1. Login ke **supabase.com** → klik **New project**
 2. Isi form:
-   - **Name**: `kth-btm`
+   - **Name**: `berkahtanimandiri`
    - **Database Password**: buat password kuat (simpan, akan dipakai nanti!)
    - **Region**: `Southeast Asia (Singapore)`
 3. Klik **Create new project** → tunggu sekitar **3–5 menit** hingga status berubah menjadi **"healthy"** (cek di Settings → General)
@@ -76,12 +76,12 @@ postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6
 ## Langkah 2 — Deploy Backend ke Render
 
 1. Login ke **render.com** → klik **New +** → pilih **Web Service**
-2. Pilih **Connect a repository** → klik **Connect GitHub** → authorize → pilih repo `kth-btm`
+2. Pilih **Connect a repository** → klik **Connect GitHub** → authorize → pilih repo `berkahtanimandiri`
 3. Isi konfigurasi berikut:
 
    | Field | Nilai |
    |---|---|
-   | **Name** | `kth-btm-backend` |
+   | **Name** | `berkahtanimandiri-backend` |
    | **Root Directory** | `apps/backend` |
    | **Environment** | `Node` |
    | **Build Command** | `npm install && npm run build` |
@@ -101,7 +101,7 @@ postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6
    | `DB_USER` | `postgres.xxxx` | Bagian setelah `//` sampai tanda `:` pada conn string |
    | `DB_PASSWORD` | *(password Supabase kamu)* | |
    | `SESSION_SECRET` | *(string acak ≥ 32 karakter)* | Jalankan di terminal: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` → salin outputnya |
-   | `CORS_ORIGIN` | `https://kth-btm.vercel.app` | Isi sementara, akan diupdate setelah Langkah 3 |
+   | `CORS_ORIGIN` | `https://berkahtanimandiri.vercel.app` | Isi sementara, akan diupdate setelah Langkah 3 |
    | `BCRYPT_ROUNDS` | `10` | |
    | `MAX_LOGIN_ATTEMPTS` | `5` | |
    | `LOCKOUT_DURATION` | `900000` | |
@@ -109,14 +109,14 @@ postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6
    | `UPLOAD_DIR` | `/tmp/uploads` | Render hanya bisa tulis ke /tmp |
    | `PNBP_TARIF_PER_HA` | `15000` | |
    | `TAHUN_PNBP` | `2026` | |
-   | `OTP_ISSUER` | `KTH-BTM` | |
+   | `OTP_ISSUER` | `berkahtanimandiri` | |
    | `OTP_WINDOW` | `1` | |
 
 5. Klik **Create Web Service** → tunggu proses build selesai (sekitar 5–10 menit)
 6. Setelah selesai, URL backend akan muncul di bagian atas halaman, bentuknya:
 
 ```
-https://kth-btm-backend.onrender.com
+https://berkahtanimandiri-backend.onrender.com
 ```
 
 **Salin URL ini**, akan digunakan di Langkah 3.
@@ -126,7 +126,7 @@ https://kth-btm-backend.onrender.com
 ## Langkah 3 — Deploy Frontend ke Vercel
 
 1. Login ke **vercel.com** → klik **Add New → Project**
-2. Klik **Import** di sebelah repo GitHub `kth-btm`
+2. Klik **Import** di sebelah repo GitHub `berkahtanimandiri`
 3. Di halaman konfigurasi:
    - Klik **Edit** di bagian **Root Directory** → ketik `apps/frontend` → klik **Continue**
    - **Framework Preset**: pastikan terpilih **Vite** (biasanya otomatis terdeteksi)
@@ -134,13 +134,13 @@ https://kth-btm-backend.onrender.com
 
    | Key | Value |
    |---|---|
-   | `VITE_API_URL` | `https://kth-btm-backend.onrender.com` *(URL dari Langkah 2)* |
+   | `VITE_API_URL` | `https://berkahtanimandiri-backend.onrender.com` *(URL dari Langkah 2)* |
 
 5. Klik **Deploy** → tunggu sekitar 2–3 menit
 6. Setelah selesai, URL frontend akan muncul, bentuknya:
 
 ```
-https://kth-btm.vercel.app
+https://berkahtanimandiri.vercel.app
 ```
 
 **Salin URL ini.**
@@ -151,13 +151,13 @@ https://kth-btm.vercel.app
 
 Sekarang URL frontend sudah diketahui, update CORS di backend:
 
-1. Buka Render Dashboard → klik service `kth-btm-backend`
+1. Buka Render Dashboard → klik service `berkahtanimandiri-backend`
 2. Klik tab **Environment**
 3. Cari variabel `CORS_ORIGIN` → klik **Edit**
 4. Ganti nilainya dengan URL frontend yang benar:
 
 ```
-https://kth-btm.vercel.app
+https://berkahtanimandiri.vercel.app
 ```
 
 5. Klik **Save Changes** → Render akan otomatis melakukan redeploy
@@ -166,7 +166,7 @@ https://kth-btm.vercel.app
 
 ## Langkah 5 — Verifikasi & Login Pertama
 
-1. Buka URL frontend di browser: `https://kth-btm.vercel.app`
+1. Buka URL frontend di browser: `https://berkahtanimandiri.vercel.app`
 2. Login dengan akun default:
    - **Email**: `admin@kthbtm.com`
    - **Password**: `Admin@2024`
@@ -200,7 +200,7 @@ Free tier Render akan mematikan server jika tidak ada request selama 15 menit. R
 **Solusi gratis**: Daftar di [uptimerobot.com](https://uptimerobot.com) → tambahkan monitor **HTTP** ke URL:
 
 ```
-https://kth-btm-backend.onrender.com/health
+https://berkahtanimandiri-backend.onrender.com/health
 ```
 
 Set interval **setiap 10 menit** → server tidak akan pernah tidur.
@@ -225,7 +225,7 @@ Setelah semua langkah selesai, catat URL-URL ini:
 
 | Layanan | URL |
 |---|---|
-| Frontend (Vercel) | `https://kth-btm.vercel.app` |
-| Backend (Render) | `https://kth-btm-backend.onrender.com` |
+| Frontend (Vercel) | `https://berkahtanimandiri.vercel.app` |
+| Backend (Render) | `https://berkahtanimandiri-backend.onrender.com` |
 | Database (Supabase) | `https://app.supabase.com/project/[project-id]` |
 | Supabase SQL Editor | `https://app.supabase.com/project/[project-id]/sql` |

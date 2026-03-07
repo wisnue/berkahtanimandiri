@@ -5,6 +5,9 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 // Pages (will be created)
 const DashboardPage = React.lazy(() => import('@/pages/dashboard/DashboardPage'));
 const LoginPage = React.lazy(() => import('@/pages/auth/LoginPage'));
+const RegisterPage = React.lazy(() => import('@/pages/auth/RegisterPage'));
+const ForgotPasswordPage = React.lazy(() => import('@/pages/auth/ForgotPasswordPage'));
+const ResetPasswordPage = React.lazy(() => import('@/pages/auth/ResetPasswordPage'));
 const AnggotaPage = React.lazy(() => import('@/pages/dashboard/AnggotaPage'));
 const AnggotaDetailPage = React.lazy(() => import('@/pages/dashboard/AnggotaDetailPage'));
 const LahanPage = React.lazy(() => import('@/pages/dashboard/LahanPage'));
@@ -33,6 +36,9 @@ export function AppRouter() {
     }>
       <Switch>
         <Route path="/login" component={LoginPage} />
+        <Route path="/register" component={RegisterPage} />
+        <Route path="/forgot-password" component={ForgotPasswordPage} />
+        <Route path="/reset-password" component={ResetPasswordPage} />
         <Route path="/">
           <ProtectedRoute>
             <DashboardPage />

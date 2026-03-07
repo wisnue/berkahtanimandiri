@@ -94,4 +94,18 @@ router.post('/password/check-strength', AuthController.checkPasswordStrength);
  */
 router.get('/password/status', authenticate, AuthController.getPasswordStatus);
 
+/**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Send password reset link to email
+ * @access  Public
+ */
+router.post('/forgot-password', strictRateLimiter, AuthController.forgotPassword);
+
+/**
+ * @route   POST /api/auth/reset-password
+ * @desc    Reset password using token
+ * @access  Public
+ */
+router.post('/reset-password', AuthController.resetPassword);
+
 export default router;

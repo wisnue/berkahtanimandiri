@@ -86,9 +86,13 @@ export default function LoginPage() {
                   />
                   <span className="text-secondary-700">Ingat saya</span>
                 </label>
-                <a href="#" className="text-primary-600 hover:text-primary-700">
+                <button
+                  type="button"
+                  onClick={() => setLocation('/forgot-password')}
+                  className="text-primary-600 hover:text-primary-700"
+                >
                   Lupa password?
-                </a>
+                </button>
               </div>
 
               <Button
@@ -127,9 +131,13 @@ export default function LoginPage() {
             <div className="mt-4 text-center">
               <p className="text-xs text-secondary-600">
                 Belum punya akun?{' '}
-                <a href="#" className="text-primary-600 hover:text-primary-700 font-medium">
-                  Hubungi admin
-                </a>
+                <button
+                  type="button"
+                  onClick={() => setLocation('/register')}
+                  className="text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  Daftar sekarang
+                </button>
               </p>
             </div>
           </CardContent>
