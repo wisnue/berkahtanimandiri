@@ -4,15 +4,13 @@ import { config } from './env';
 import * as schema from '../db/schema';
 
 // Create PostgreSQL connection pool
+// Uses DATABASE_URL connection string (required for Supabase/cloud DBs)
 export const pool = new Pool({
-  host: config.db.host,
-  port: config.db.port,
-  database: config.db.name,
-  user: config.db.user,
-  password: config.db.password,
+  connectionString: config.db.url,
+  ssl: config.isProduction ? { rejectUnauthorized: false } : false,
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 5000,
 });
 
 // Initialize Drizzle ORM

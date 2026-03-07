@@ -11,7 +11,7 @@ const envSchema = z.object({
   DB_PORT: z.string().default('5432'),
   DB_NAME: z.string().default('kth_btm'),
   DB_USER: z.string().default('postgres'),
-  DB_PASSWORD: z.string(),
+  DB_PASSWORD: z.string().default(''),
   
   // Session
   SESSION_SECRET: z.string().min(32),
