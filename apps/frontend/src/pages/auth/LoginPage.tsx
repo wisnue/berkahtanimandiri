@@ -106,28 +106,6 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            {/* Demo Credentials */}
-            <div className="mt-6 pt-6 border-t border-secondary-200">
-              <p className="text-xs font-medium text-secondary-700 mb-3 text-center">
-                Demo Credentials
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {/* Admin Credentials */}
-                <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-                  <p className="text-xs font-semibold text-blue-900 mb-1.5">Admin</p>
-                  <p className="text-xs text-blue-700 font-mono">admin@kthbtm.com</p>
-                  <p className="text-xs text-blue-700 font-mono">admin123</p>
-                </div>
-                
-                {/* Petugas Credentials */}
-                <div className="bg-green-50 rounded-lg p-3 border border-green-100">
-                  <p className="text-xs font-semibold text-green-900 mb-1.5">Petugas</p>
-                  <p className="text-xs text-green-700 font-mono">test@kthbtm.com</p>
-                  <p className="text-xs text-green-700 font-mono">test123</p>
-                </div>
-              </div>
-            </div>
-
             <div className="mt-4 text-center">
               <p className="text-xs text-secondary-600">
                 Belum punya akun?{' '}

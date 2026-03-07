@@ -1,4 +1,8 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const rawApiUrl = import.meta.env.VITE_API_URL || '';
+// Ensure we always have the /api prefix
+const API_BASE_URL = rawApiUrl
+  ? rawApiUrl.replace(/\/api$/, '') + '/api'
+  : '/api';
 
 interface ApiError {
   success: false;
