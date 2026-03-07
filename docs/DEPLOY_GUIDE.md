@@ -49,7 +49,8 @@ git push -u origin main
    - **Name**: `kth-btm`
    - **Database Password**: buat password kuat (simpan, akan dipakai nanti!)
    - **Region**: `Southeast Asia (Singapore)`
-3. Klik **Create new project** → tunggu sekitar 2 menit
+3. Klik **Create new project** → tunggu sekitar **3–5 menit** hingga status berubah menjadi **"healthy"** (cek di Settings → General)
+4. Jika muncul error `ECONNREFUSED` saat membuka SQL Editor → project belum siap, tunggu dan refresh browser
 4. Setelah siap, klik **SQL Editor** di sidebar kiri
 5. Klik **New query** → buka file `supabase/setup.sql` di VS Code → **copy semua isinya** → paste di SQL Editor → klik **RUN**
 6. Verifikasi: klik **Table Editor** → pastikan tabel `users`, `anggota`, `sessions`, `settings_groups` dsb sudah muncul
@@ -99,7 +100,7 @@ postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6
    | `DB_NAME` | `postgres` | |
    | `DB_USER` | `postgres.xxxx` | Bagian setelah `//` sampai tanda `:` pada conn string |
    | `DB_PASSWORD` | *(password Supabase kamu)* | |
-   | `SESSION_SECRET` | *(string acak ≥ 32 karakter)* | Buka [randomkeygen.com](https://randomkeygen.com) → salin **CodeIgniter Encryption Keys** |
+   | `SESSION_SECRET` | *(string acak ≥ 32 karakter)* | Jalankan di terminal: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` → salin outputnya |
    | `CORS_ORIGIN` | `https://kth-btm.vercel.app` | Isi sementara, akan diupdate setelah Langkah 3 |
    | `BCRYPT_ROUNDS` | `10` | |
    | `MAX_LOGIN_ATTEMPTS` | `5` | |
@@ -185,6 +186,8 @@ https://kth-btm.vercel.app
 | Backend Render lambat 30–50 detik | Normal — free tier "tidur" jika tidak ada request selama 15 menit. Lihat solusi di bawah |
 | File upload hilang setelah beberapa waktu | Normal di free tier — `/tmp` tidak persisten. Untuk produksi, integrasikan Supabase Storage |
 | Build error di Render | Cek log build di Render Dashboard → tab **Logs** |
+| `ECONNREFUSED ... :5432` di Supabase SQL Editor | Project Supabase sedang **paused**. Buka dashboard Supabase → klik **Restore project** → tunggu 2 menit → coba lagi |
+| SQL Editor Supabase error saat project baru dibuat | Project masih inisialisasi. Tunggu 2–3 menit → refresh halaman → coba jalankan query ulang |
 
 ---
 
