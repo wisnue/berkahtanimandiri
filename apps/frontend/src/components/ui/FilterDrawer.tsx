@@ -64,7 +64,8 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
     <>
       {/* Backdrop */}
       <div
-        style={{ position: 'fixed', inset: 0, zIndex: 9998, backgroundColor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto' }}
+        style={{ position: 'fixed', inset: 0, zIndex: 9998, backgroundColor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto', cursor: 'pointer' }}
+        onClick={onClose}
       />
 
       {/* Drawer Panel */}

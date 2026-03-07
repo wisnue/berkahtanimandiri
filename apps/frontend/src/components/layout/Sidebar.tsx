@@ -34,14 +34,7 @@ interface SidebarProps {
 export function Sidebar({ user, onCollapseChange, isMobileOpen = false, onMobileClose }: SidebarProps) {
   const [location] = useLocation();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
-  const [expandedGroups, setExpandedGroups] = React.useState<Record<string, boolean>>(() => {
-    // Load from localStorage or default
-    const saved = localStorage.getItem('sidebarExpandedGroups');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return { 'DASHBOARD': true };
-  });
+  const [expandedGroups, setExpandedGroups] = React.useState<Record<string, boolean>>({});
 
   const handleToggleCollapse = () => {
     const newState = !isCollapsed;
@@ -50,15 +43,10 @@ export function Sidebar({ user, onCollapseChange, isMobileOpen = false, onMobile
   };
 
   const toggleGroup = (groupTitle: string) => {
-    setExpandedGroups(prev => {
-      const newState = {
-        ...prev,
-        [groupTitle]: !prev[groupTitle]
-      };
-      // Save to localStorage
-      localStorage.setItem('sidebarExpandedGroups', JSON.stringify(newState));
-      return newState;
-    });
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupTitle]: !prev[groupTitle]
+    }));
   };
 
   const handleMobileMenuClick = () => {
@@ -116,23 +104,16 @@ export function Sidebar({ user, onCollapseChange, isMobileOpen = false, onMobile
 
   // Auto-expand group containing current page
   React.useEffect(() => {
-    // Find which group contains the current location
     const activeGroup = navigationGroups.find(group => 
       group.items.some(item => item.href === location)
     );
-
     if (activeGroup) {
-      setExpandedGroups(prev => {
-        const newState = {
-          ...prev,
-          [activeGroup.title]: true
-        };
-        // Save to localStorage
-        localStorage.setItem('sidebarExpandedGroups', JSON.stringify(newState));
-        return newState;
-      });
+      setExpandedGroups(prev => ({
+        ...prev,
+        [activeGroup.title]: true
+      }));
     }
-  }, [location]); // Run when location changes
+  }, [location]);
 
   return (
     <>
