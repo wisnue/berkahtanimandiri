@@ -29,7 +29,7 @@ services:
       - key: SESSION_SECRET
         generateValue: true  # Render auto-generate secret
       - key: CORS_ORIGIN
-        sync: false   # Isi dengan URL Vercel: https://namaapp.vercel.app
+        value: "https://berkahtanimandiri.vercel.app"
       - key: BCRYPT_ROUNDS
         value: "10"
       - key: MAX_LOGIN_ATTEMPTS
