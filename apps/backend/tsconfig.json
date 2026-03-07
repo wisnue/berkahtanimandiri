@@ -3,6 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "baseUrl": "./src",
     "paths": {
       "@/config/*": ["./config/*"],

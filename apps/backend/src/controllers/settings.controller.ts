@@ -32,8 +32,8 @@ export const getAllSystemSettings = async (
 
     // Group by category
     const grouped = settings.reduce((acc: any, setting) => {
-      if (!acc[setting.category]) {
-        acc[setting.category] = {};
+      if (!acc[setting.settingCategory]) {
+        acc[setting.settingCategory] = {};
       }
       
       // Convert value based on type
@@ -41,20 +41,20 @@ export const getAllSystemSettings = async (
       if (setting.settingType === 'boolean') {
         value = setting.settingValue === 'true';
       } else if (setting.settingType === 'number') {
-        value = parseInt(setting.settingValue, 10);
+        value = parseInt(setting.settingValue || '0', 10);
       } else if (setting.settingType === 'json') {
         try {
-          value = JSON.parse(setting.settingValue);
+          value = JSON.parse(setting.settingValue || 'null');
         } catch {
           value = setting.settingValue;
         }
       }
 
-      acc[setting.category][setting.settingKey] = {
+      acc[setting.settingCategory][setting.settingKey] = {
         value,
         type: setting.settingType,
         description: setting.description,
-        isSensitive: setting.isSensitive,
+        isPublic: setting.isPublic,
       };
 
       return acc;
@@ -83,17 +83,17 @@ export const getSettingsByCategory = async (
     const settings = await db
       .select()
       .from(systemSettings)
-      .where(eq(systemSettings.category, category));
+      .where(eq(systemSettings.settingCategory, category));
 
     const formatted = settings.map((setting) => {
       let value: any = setting.settingValue;
       if (setting.settingType === 'boolean') {
         value = setting.settingValue === 'true';
       } else if (setting.settingType === 'number') {
-        value = parseInt(setting.settingValue, 10);
+        value = parseInt(setting.settingValue || '0', 10);
       } else if (setting.settingType === 'json') {
         try {
-          value = JSON.parse(setting.settingValue);
+          value = JSON.parse(setting.settingValue || 'null');
         } catch {
           value = setting.settingValue;
         }
@@ -104,7 +104,7 @@ export const getSettingsByCategory = async (
         value,
         type: setting.settingType,
         description: setting.description,
-        isSensitive: setting.isSensitive,
+        isPublic: setting.isPublic,
       };
     });
 
@@ -156,19 +156,18 @@ export const updateSystemSettings = async (
         .update(systemSettings)
         .set({
           settingValue: stringValue,
-          updatedBy: userId,
           updatedAt: new Date(),
         })
         .where(eq(systemSettings.id, oldSetting.id));
 
       // Log to audit
       await db.insert(settingsAuditLog).values({
-        settingCategory: oldSetting.category,
+        settingCategory: oldSetting.settingCategory,
         settingKey: key,
         oldValue: oldSetting.settingValue,
         newValue: stringValue,
         changeType: 'update',
-        changedBy: userId,
+        changedBy: Number(userId),
         ipAddress,
         userAgent,
       });
@@ -249,7 +248,7 @@ export const updateOrganizationSettings = async (
         oldValue: JSON.stringify(existing),
         newValue: JSON.stringify(orgData),
         changeType: 'update',
-        changedBy: userId,
+        changedBy: Number(userId),
         ipAddress,
         userAgent,
       });
@@ -261,7 +260,7 @@ export const updateOrganizationSettings = async (
         settingCategory: 'organization',
         newValue: JSON.stringify(orgData),
         changeType: 'create',
-        changedBy: userId,
+        changedBy: Number(userId),
         ipAddress,
         userAgent,
       });
@@ -287,7 +286,7 @@ export const createBackup = async (
   try {
     const userId = req.session.userId!;
 
-    const result = await autoBackupScheduler.executeBackup(null, 'manual', userId);
+    const result = await autoBackupScheduler.executeBackup(null, 'manual', Number(userId));
 
     if (result.success) {
       res.json({
@@ -420,10 +419,9 @@ export const restoreBackup = async (
       settingKey: 'restore',
       newValue: `Restore from ${backup.filename}`,
       changeType: 'restore',
-      changedBy: userId,
+      changedBy: Number(userId),
       ipAddress,
       userAgent,
-      changeReason: 'Database restore attempt',
     });
 
     res.json({
@@ -553,7 +551,8 @@ export const updateBackupSchedule = async (
       .where(eq(backupSchedules.id, parseInt(id)));
 
     if (updated) {
-      await autoBackupScheduler.updateSchedule(updated);
+      // Cast needed because DB type has isEnabled: boolean | null but service expects boolean
+      await autoBackupScheduler.updateSchedule(updated as any);
     }
 
     res.json({
@@ -625,8 +624,8 @@ export const getSystemHealthMetrics = async (
     const metrics = await db
       .select()
       .from(systemHealthMetrics)
-      .where(gte(systemHealthMetrics.recordedAt, since))
-      .orderBy(desc(systemHealthMetrics.recordedAt));
+      .where(gte(systemHealthMetrics.createdAt, since))
+      .orderBy(desc(systemHealthMetrics.createdAt));
 
     res.json({
       success: true,
@@ -650,7 +649,7 @@ export const recordSystemHealthMetric = async (
 
     await db.insert(systemHealthMetrics).values({
       metricType,
-      metricValue: metricValue.toString(),
+      metricValue: Number(metricValue),
       metricUnit,
     });
 

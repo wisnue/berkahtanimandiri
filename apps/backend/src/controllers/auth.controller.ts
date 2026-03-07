@@ -600,7 +600,7 @@ export class AuthController {
       if (!isValid) {
         // Log failed 2FA verification
         await loginAttemptsService.logLoginAttempt({
-          username: user.email,
+          username: user.email || user.username || String(userId),
           ipAddress,
           userAgent,
           success: false,
@@ -615,7 +615,7 @@ export class AuthController {
 
       // Log successful 2FA verification and login
       await loginAttemptsService.logLoginAttempt({
-        username: user.email,
+        username: user.email || user.username || String(userId),
         ipAddress,
         userAgent,
         success: true,

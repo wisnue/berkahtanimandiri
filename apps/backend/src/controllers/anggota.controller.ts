@@ -418,14 +418,10 @@ export class AnggotaController {
             kabupaten: row.kabupaten || 'Kabupaten Gembol',
             provinsi: row.provinsi || 'Jawa Tengah',
             kodePos: row.kodePos || '',
-            noTelepon: row.noTelepon || null,
-            noWhatsapp: row.noWhatsapp || null,
+            nomorTelepon: row.noTelepon || null,
             email: row.email || null,
-            pendidikanTerakhir: row.pendidikanTerakhir || null,
+            pendidikan: row.pendidikanTerakhir || null,
             pekerjaan: row.pekerjaan || null,
-            namaBank: row.namaBank || null,
-            nomorRekening: row.nomorRekening || null,
-            atasNamaRekening: row.atasNamaRekening || null,
             statusAnggota: row.statusAnggota,
             tanggalBergabung: row.tanggalBergabung,
             keterangan: row.keterangan || null,
@@ -435,14 +431,13 @@ export class AnggotaController {
 
           // Audit log
           if (req.session.userId) {
-            await auditTrailService.log({
+            await auditTrailService.createAuditLog({
               userId: req.session.userId,
               tableName: 'anggota',
               action: 'CREATE',
               recordId: nomorAnggota,
-              changes: JSON.stringify(row),
-              ipAddress: req.ip || '',
-              userAgent: req.get('user-agent') || '',
+              newValues: row,
+              req,
             });
           }
         } catch (rowError) {
