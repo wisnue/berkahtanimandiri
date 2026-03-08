@@ -28,46 +28,28 @@ class ApiClient {
   private baseUrl: string;
   private csrfToken: string | null = null;
   private tokenFetchPromise: Promise<void> | null = null;
-  /** Resolves when the backend is reachable (handles Render free-tier cold start) */
-  public serverReadyPromise: Promise<void>;
-  public isServerReady = false;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
-    // Fetch CSRF token with retry for Render free-tier cold start (~60 s warm-up)
-    const fetchPromise = this.fetchCSRFToken();
-    this.tokenFetchPromise = fetchPromise;
-    this.serverReadyPromise = fetchPromise;
+    this.tokenFetchPromise = this.fetchCSRFToken();
   }
 
   /**
-   * Fetch CSRF token from backend.
-   * Retries up to 6 times (10 s apart) to survive Render free-tier cold starts.
+   * Fetch CSRF token from backend (single attempt, Vercel is always on).
    */
   private async fetchCSRFToken(): Promise<void> {
-    const MAX_RETRIES = 6;
-    const RETRY_DELAY_MS = 10_000;
-
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const response = await fetch(`${this.baseUrl}/csrf-token`, {
-          method: 'GET',
-          credentials: 'include',
-        });
-        if (response.ok) {
-          const data = await response.json();
-          this.csrfToken = data.data?.csrfToken || null;
-          this.isServerReady = true;
-          return;
-        }
-      } catch {
-        // Network error or CORS — likely cold start, will retry
+    try {
+      const response = await fetch(`${this.baseUrl}/csrf-token`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        this.csrfToken = data.data?.csrfToken || null;
       }
-      if (attempt < MAX_RETRIES) {
-        await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
-      }
+    } catch {
+      // Network error — will retry on next state-changing request
     }
-    // Exhausted retries — server unavailable
   }
 
   /**
