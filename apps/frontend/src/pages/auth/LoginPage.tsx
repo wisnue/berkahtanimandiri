@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/app/AuthContext';
-import { AlertTriangle, WifiOff } from 'lucide-react';
+import { AlertTriangle, WifiOff, Loader2 } from 'lucide-react';
+import { api } from '@/services/api';
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
@@ -13,8 +14,22 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isConnecting, setIsConnecting] = useState(!api.isServerReady);
+  const [connectingSeconds, setConnectingSeconds] = useState(0);
 
   const isConnectionError = error.includes('server') || error.includes('terhubung') || error.includes('jaringan');
+
+  // Handle Render free-tier cold start: show connecting banner until backend wakes up
+  useEffect(() => {
+    if (api.isServerReady) return;
+    let seconds = 0;
+    const timer = setInterval(() => { seconds++; setConnectingSeconds(seconds); }, 1000);
+    api.serverReadyPromise.then(() => {
+      clearInterval(timer);
+      setIsConnecting(false);
+    });
+    return () => clearInterval(timer);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +71,22 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Cold-start banner: Render free tier spins down after inactivity */}
+            {isConnecting && (
+              <div className="mb-3 p-3 rounded-md border bg-blue-50 border-blue-200 text-blue-800 text-sm">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Menghubungkan ke server...</p>
+                    <p className="text-xs mt-0.5 opacity-80">
+                      Server sedang dinyalakan, harap tunggu ({connectingSeconds}d).
+                      Proses ini memakan waktu hingga 60 detik.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {error && (
               <div className={`mb-3 p-3 rounded-md border text-sm ${
                 isConnectionError
