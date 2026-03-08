@@ -256,28 +256,36 @@ CREATE TABLE IF NOT EXISTS "settings" (
   CONSTRAINT "settings_key_unique" UNIQUE("key")
 );
 
--- Foreign Keys
+-- Foreign Keys (safe re-run: drop before add)
+ALTER TABLE "anggota" DROP CONSTRAINT IF EXISTS "anggota_user_id_users_id_fk";
 ALTER TABLE "anggota" ADD CONSTRAINT "anggota_user_id_users_id_fk"
   FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL;
 
+ALTER TABLE "lahan_khdpk" DROP CONSTRAINT IF EXISTS "lahan_khdpk_anggota_id_fk";
 ALTER TABLE "lahan_khdpk" ADD CONSTRAINT "lahan_khdpk_anggota_id_fk"
   FOREIGN KEY ("anggota_id") REFERENCES "anggota"("id") ON DELETE CASCADE;
 
+ALTER TABLE "pnbp" DROP CONSTRAINT IF EXISTS "pnbp_anggota_id_fk";
 ALTER TABLE "pnbp" ADD CONSTRAINT "pnbp_anggota_id_fk"
   FOREIGN KEY ("anggota_id") REFERENCES "anggota"("id") ON DELETE CASCADE;
 
+ALTER TABLE "pnbp" DROP CONSTRAINT IF EXISTS "pnbp_lahan_id_fk";
 ALTER TABLE "pnbp" ADD CONSTRAINT "pnbp_lahan_id_fk"
   FOREIGN KEY ("lahan_id") REFERENCES "lahan_khdpk"("id") ON DELETE SET NULL;
 
+ALTER TABLE "keuangan" DROP CONSTRAINT IF EXISTS "keuangan_dibuat_oleh_fk";
 ALTER TABLE "keuangan" ADD CONSTRAINT "keuangan_dibuat_oleh_fk"
   FOREIGN KEY ("dibuat_oleh") REFERENCES "users"("id") ON DELETE SET NULL;
 
+ALTER TABLE "kegiatan" DROP CONSTRAINT IF EXISTS "kegiatan_lahan_id_fk";
 ALTER TABLE "kegiatan" ADD CONSTRAINT "kegiatan_lahan_id_fk"
   FOREIGN KEY ("lahan_id") REFERENCES "lahan_khdpk"("id") ON DELETE SET NULL;
 
+ALTER TABLE "dokumen" DROP CONSTRAINT IF EXISTS "dokumen_uploaded_by_fk";
 ALTER TABLE "dokumen" ADD CONSTRAINT "dokumen_uploaded_by_fk"
   FOREIGN KEY ("uploaded_by") REFERENCES "users"("id") ON DELETE SET NULL;
 
+ALTER TABLE "activity_logs" DROP CONSTRAINT IF EXISTS "activity_logs_user_id_fk";
 ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_user_id_fk"
   FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL;
 
@@ -529,6 +537,9 @@ DROP TRIGGER IF EXISTS update_organization_settings_updated_at ON organization_s
 CREATE TRIGGER update_organization_settings_updated_at
     BEFORE UPDATE ON organization_settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Ensure is_public column exists (may be missing if table was created by older migration)
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE;
 
 -- Insert default organization settings row
 INSERT INTO organization_settings (organization_name, organization_short_name)
