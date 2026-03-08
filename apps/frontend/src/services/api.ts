@@ -154,9 +154,21 @@ class ApiClient {
         pagination: data.pagination, // ✅ Include pagination from backend
       };
     } catch (error) {
+      // Translate common network errors to user-friendly Indonesian messages
+      let message = 'Terjadi kesalahan jaringan. Silakan coba lagi.';
+      if (error instanceof TypeError) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes('failed to fetch') || msg.includes('network') || msg.includes('fetch')) {
+          message = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda atau coba beberapa saat lagi.';
+        } else if (msg.includes('cors')) {
+          message = 'Koneksi ke server diblokir (CORS). Hubungi administrator sistem.';
+        } else if (msg.includes('timeout') || msg.includes('timed out')) {
+          message = 'Koneksi ke server habis waktu (timeout). Silakan coba lagi.';
+        }
+      }
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Network error',
+        message,
       };
     }
   }
@@ -192,7 +204,11 @@ class ApiClient {
       }
       return { success: true, data: json.data || json, message: json.message };
     } catch (error) {
-      return { success: false, message: error instanceof Error ? error.message : 'Network error' };
+      let message = 'Terjadi kesalahan jaringan. Silakan coba lagi.';
+      if (error instanceof TypeError && error.message.toLowerCase().includes('fetch')) {
+        message = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda atau coba beberapa saat lagi.';
+      }
+      return { success: false, message };
     }
   }
 

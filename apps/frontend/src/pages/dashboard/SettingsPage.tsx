@@ -64,6 +64,8 @@ export function SettingsPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('system');
   const [loading, setLoading] = useState(false);
+  const [systemError, setSystemError] = useState<string | null>(null);
+  const [orgError, setOrgError] = useState<string | null>(null);
   
   // User Roles State
   const roles = [
@@ -126,37 +128,32 @@ export function SettingsPage() {
 
   const loadSystemSettings = async () => {
     setLoading(true);
+    setSystemError(null);
     try {
       const response = await api.get<{ data: any }>('/settings/system');
       if (response.success && response.data.data) {
         setSystemSettings(response.data.data);
       } else {
-        showToast.error('Gagal memuat pengaturan sistem');
-        console.error('Invalid response:', response);
+        setSystemError(response.message || 'Gagal memuat pengaturan sistem');
       }
     } catch (error: any) {
-      console.error('Failed to load system settings:', error);
-      showToast.error(error.response?.data?.message || error.message || 'Gagal memuat pengaturan sistem');
+      setSystemError(error.message || 'Gagal memuat pengaturan sistem');
     } finally {
       setLoading(false);
     }
   };
 
   const loadOrganizationSettings = async () => {
-    setLoading(true);
+    setOrgError(null);
     try {
       const response = await api.get<{ data: OrganizationSettings }>('/settings/organization');
       if (response.success && response.data.data) {
         setOrgSettings(response.data.data);
       } else {
-        showToast.error('Gagal memuat informasi organisasi');
-        console.error('Invalid response:', response);
+        setOrgError(response.message || 'Gagal memuat informasi organisasi');
       }
     } catch (error: any) {
-      console.error('Failed to load organization settings:', error);
-      showToast.error(error.response?.data?.message || error.message || 'Gagal memuat informasi organisasi');
-    } finally {
-      setLoading(false);
+      setOrgError(error.message || 'Gagal memuat informasi organisasi');
     }
   };
 
@@ -165,9 +162,11 @@ export function SettingsPage() {
       const response = await api.get<{ data: { backups: BackupItem[] } }>('/settings/backup/history?limit=20');
       if (response.success) {
         setBackupHistory(response.data.data.backups);
+      } else {
+        showToast.error(response.message || 'Gagal memuat riwayat backup');
       }
-    } catch (error) {
-      console.error('Failed to load backup history:', error);
+    } catch (error: any) {
+      showToast.error('Gagal memuat riwayat backup');
     }
   };
 
@@ -177,8 +176,8 @@ export function SettingsPage() {
       if (response.success) {
         setBackupStats(response.data.data);
       }
-    } catch (error) {
-      console.error('Failed to load backup statistics:', error);
+    } catch {
+      // fail silently for stats
     }
   };
 
@@ -190,9 +189,11 @@ export function SettingsPage() {
       if (response.success) {
         setAuditLogs(response.data.data.logs);
         setAuditTotal(response.data.data.total);
+      } else {
+        showToast.error(response.message || 'Gagal memuat audit log');
       }
-    } catch (error) {
-      console.error('Failed to load audit logs:', error);
+    } catch {
+      showToast.error('Gagal memuat audit log');
     }
   };
 
@@ -204,6 +205,8 @@ export function SettingsPage() {
         showToast.success('Backup database berhasil dibuat!');
         await loadBackupHistory();
         await loadBackupStatistics();
+      } else {
+        showToast.error(response.message || 'Gagal membuat backup');
       }
     } catch (error: any) {
       showToast.error(error.message || 'Gagal membuat backup');
@@ -214,13 +217,13 @@ export function SettingsPage() {
 
   const handleDownloadBackup = async (backupId: number, filename: string) => {
     try {
-      const response = await fetch(`/api/settings/backup/${backupId}/download`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      const rawApiUrl = import.meta.env.VITE_API_URL || '';
+      const apiBase = rawApiUrl ? rawApiUrl.replace(/\/api$/, '') + '/api' : '/api';
+      const response = await fetch(`${apiBase}/settings/backup/${backupId}/download`, {
+        credentials: 'include',
       });
       
-      if (!response.ok) throw new Error('Download failed');
+      if (!response.ok) throw new Error('Download gagal');
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -230,15 +233,16 @@ export function SettingsPage() {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
       
       showToast.success('Backup berhasil diunduh');
     } catch (error: any) {
-      showToast.error('Gagal mengunduh backup');
+      showToast.error('Gagal mengunduh backup: ' + (error.message || 'coba lagi'));
     }
   };
 
   const handleDeleteBackup = async (backupId: number) => {
-    if (!confirm('Yakin ingin menghapus backup ini?')) return;
+    if (!confirm('Yakin ingin menghapus backup ini? Tindakan ini tidak dapat dibatalkan.')) return;
 
     try {
       const response = await api.delete(`/settings/backup/${backupId}`);
@@ -246,6 +250,8 @@ export function SettingsPage() {
         showToast.success('Backup berhasil dihapus');
         await loadBackupHistory();
         await loadBackupStatistics();
+      } else {
+        showToast.error(response.message || 'Gagal menghapus backup');
       }
     } catch (error: any) {
       showToast.error('Gagal menghapus backup');
@@ -255,7 +261,6 @@ export function SettingsPage() {
   const handleSaveSystemSettings = async () => {
     setLoading(true);
     try {
-      // Convert grouped settings to flat key-value pairs
       const flatSettings: any = {};
       Object.values(systemSettings).forEach((category: any) => {
         Object.entries(category).forEach(([key, setting]: [string, any]) => {
@@ -267,9 +272,11 @@ export function SettingsPage() {
       if (response.success) {
         showToast.success('Pengaturan sistem berhasil disimpan');
         await loadSystemSettings();
+      } else {
+        showToast.error(response.message || 'Gagal menyimpan pengaturan sistem');
       }
     } catch (error: any) {
-      showToast.error('Gagal menyimpan pengaturan');
+      showToast.error(error.message || 'Gagal menyimpan pengaturan sistem');
     } finally {
       setLoading(false);
     }
@@ -307,9 +314,11 @@ export function SettingsPage() {
         showToast.success(`Cleanup selesai: ${response.data.data.deletedCount} backup lama dihapus`);
         await loadBackupHistory();
         await loadBackupStatistics();
+      } else {
+        showToast.error(response.message || 'Gagal menjalankan cleanup');
       }
     } catch (error: any) {
-      showToast.error('Gagal menjalankan cleanup');
+      showToast.error(error.message || 'Gagal menjalankan cleanup');
     } finally {
       setLoading(false);
     }
@@ -435,10 +444,33 @@ export function SettingsPage() {
         {/* System Settings Tab */}
         {activeTab === 'system' && (
           <div className="space-y-4">
-            {Object.keys(systemSettings).length === 0 ? (
+            {systemError ? (
+              <Card className="p-8 text-center">
+                <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+                <p className="text-gray-800 font-medium mb-1">Gagal memuat pengaturan sistem</p>
+                <p className="text-sm text-gray-500 mb-4">{systemError}</p>
+                <button
+                  onClick={loadSystemSettings}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700"
+                >
+                  Coba Lagi
+                </button>
+              </Card>
+            ) : loading && Object.keys(systemSettings).length === 0 ? (
               <Card className="p-8 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
                 <p className="text-gray-600">Memuat pengaturan sistem...</p>
+              </Card>
+            ) : Object.keys(systemSettings).length === 0 ? (
+              <Card className="p-8 text-center">
+                <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">Belum ada pengaturan sistem yang tersedia</p>
+                <button
+                  onClick={loadSystemSettings}
+                  className="mt-3 px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700"
+                >
+                  Muat Ulang
+                </button>
               </Card>
             ) : (
               <>
@@ -653,6 +685,15 @@ export function SettingsPage() {
         {/* Organization Settings Tab */}
         {activeTab === 'organization' && (
           <div className="space-y-4">
+            {orgError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-red-700 font-medium">Gagal memuat data organisasi</p>
+                  <p className="text-xs text-red-600 mt-0.5">{orgError} — Data yang ditampilkan adalah nilai default.</p>
+                </div>
+              </div>
+            )}
             <Card className="p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Informasi Organisasi</h3>
               <div className="space-y-4">

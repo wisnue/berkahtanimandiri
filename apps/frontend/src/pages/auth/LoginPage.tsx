@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/app/AuthContext';
+import { AlertTriangle, WifiOff } from 'lucide-react';
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
@@ -12,6 +13,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  const isConnectionError = error.includes('server') || error.includes('terhubung') || error.includes('jaringan');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,8 +57,25 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             {error && (
-              <div className="mb-3 p-2.5 bg-red-50 border border-red-200 rounded-md text-red-700 text-xs">
-                {error}
+              <div className={`mb-3 p-3 rounded-md border text-sm ${
+                isConnectionError
+                  ? 'bg-orange-50 border-orange-200 text-orange-800'
+                  : 'bg-red-50 border-red-200 text-red-700'
+              }`}>
+                <div className="flex items-start gap-2">
+                  {isConnectionError
+                    ? <WifiOff className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    : <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  }
+                  <div>
+                    <p className="font-medium">{error}</p>
+                    {isConnectionError && (
+                      <p className="text-xs mt-1 opacity-80">
+                        Server sedang tidak dapat dijangkau. Pastikan koneksi internet Anda aktif dan coba lagi dalam beberapa menit.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
             
