@@ -423,30 +423,30 @@ CREATE TABLE IF NOT EXISTS session_history (
 
 CREATE TABLE IF NOT EXISTS system_settings (
   id SERIAL PRIMARY KEY,
-  setting_key VARCHAR(100) NOT NULL UNIQUE,
+  setting_key VARCHAR(100) UNIQUE NOT NULL,
   setting_value TEXT,
+  setting_category VARCHAR(50) NOT NULL,
   setting_type VARCHAR(20) DEFAULT 'string',
-  setting_category VARCHAR(50) DEFAULT 'general',
   description TEXT,
-  is_sensitive BOOLEAN DEFAULT FALSE,
-  is_readonly BOOLEAN DEFAULT FALSE,
+  is_public BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS organization_settings (
   id SERIAL PRIMARY KEY,
-  org_name VARCHAR(255),
-  org_short_name VARCHAR(50),
-  org_address TEXT,
-  org_phone VARCHAR(20),
-  org_email VARCHAR(100),
-  org_website VARCHAR(100),
-  org_logo VARCHAR(500),
-  org_description TEXT,
-  sk_pembentukan VARCHAR(100),
-  tanggal_berdiri DATE,
-  wilayah_kerja TEXT,
+  organization_name VARCHAR(255) NOT NULL,
+  organization_short_name VARCHAR(50),
+  organization_logo TEXT,
+  organization_address TEXT,
+  organization_phone VARCHAR(20),
+  organization_email VARCHAR(100),
+  organization_website VARCHAR(255),
+  head_name VARCHAR(255),
+  head_position VARCHAR(100),
+  secretary_name VARCHAR(255),
+  treasurer_name VARCHAR(255),
+  fiscal_year_start INTEGER DEFAULT 1,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
@@ -494,10 +494,72 @@ CREATE TABLE IF NOT EXISTS settings_audit_log (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS system_health_metrics (
+  id SERIAL PRIMARY KEY,
+  metric_type VARCHAR(50) NOT NULL,
+  metric_value NUMERIC,
+  metric_unit VARCHAR(20),
+  metadata JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_system_settings_category ON system_settings(setting_category);
+CREATE INDEX IF NOT EXISTS idx_system_settings_key ON system_settings(setting_key);
+CREATE INDEX IF NOT EXISTS idx_backup_history_created_at ON backup_history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_backup_schedules_enabled ON backup_schedules(is_enabled);
+CREATE INDEX IF NOT EXISTS idx_settings_audit_created_at ON settings_audit_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_health_metrics_type ON system_health_metrics(metric_type);
+CREATE INDEX IF NOT EXISTS idx_health_metrics_created_at ON system_health_metrics(created_at DESC);
+
+-- updated_at trigger function
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_system_settings_updated_at ON system_settings;
+CREATE TRIGGER update_system_settings_updated_at
+    BEFORE UPDATE ON system_settings
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_organization_settings_updated_at ON organization_settings;
+CREATE TRIGGER update_organization_settings_updated_at
+    BEFORE UPDATE ON organization_settings
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Insert default organization settings row
-INSERT INTO organization_settings (org_name, org_short_name)
-VALUES ('KTH Berkah Tani Mandiri', 'KTH BTM')
+INSERT INTO organization_settings (organization_name, organization_short_name)
+VALUES ('Kelompok Tani Hutan Berkah Tani Mandiri', 'KTH BTM')
 ON CONFLICT DO NOTHING;
+
+-- Insert default system settings
+INSERT INTO system_settings (setting_key, setting_value, setting_category, setting_type, description, is_public) VALUES
+  ('app_name', 'KTH BTM Management System', 'general', 'string', 'Application name', true),
+  ('app_version', '1.0.0', 'general', 'string', 'Application version', true),
+  ('app_timezone', 'Asia/Jakarta', 'general', 'string', 'Default timezone', false),
+  ('date_format', 'DD/MM/YYYY', 'general', 'string', 'Date display format', false),
+  ('currency', 'IDR', 'general', 'string', 'Default currency', true),
+  ('session_timeout', '1800', 'security', 'number', 'Session timeout in seconds (30 min)', false),
+  ('max_login_attempts', '5', 'security', 'number', 'Maximum login attempts before lockout', false),
+  ('account_lockout_duration', '900', 'security', 'number', 'Account lockout duration in seconds (15 min)', false),
+  ('password_expiry_days', '90', 'security', 'number', 'Password expiration days', false),
+  ('password_min_length', '8', 'security', 'number', 'Minimum password length', false),
+  ('password_require_uppercase', 'true', 'security', 'boolean', 'Require uppercase in password', false),
+  ('password_require_lowercase', 'true', 'security', 'boolean', 'Require lowercase in password', false),
+  ('password_require_number', 'true', 'security', 'boolean', 'Require number in password', false),
+  ('password_require_special', 'true', 'security', 'boolean', 'Require special character in password', false),
+  ('two_factor_enabled', 'false', 'security', 'boolean', 'Enable two-factor authentication', false),
+  ('backup_retention_days', '90', 'backup', 'number', 'Backup retention period in days', false),
+  ('backup_auto_cleanup', 'true', 'backup', 'boolean', 'Automatically cleanup old backups', false),
+  ('backup_compression', 'true', 'backup', 'boolean', 'Compress backup files', false),
+  ('email_from_name', 'KTH BTM System', 'email', 'string', 'Email sender name', false),
+  ('email_from_address', 'noreply@kthbtm.org', 'email', 'string', 'Email sender address', false),
+  ('notification_email_enabled', 'true', 'notification', 'boolean', 'Enable email notifications', false),
+  ('notification_expiry_reminder_days', '30', 'notification', 'number', 'Days before expiry to send reminder', false)
+ON CONFLICT (setting_key) DO NOTHING;
 
 -- =====================================================
 -- PART 6: DEFAULT ADMIN USER
@@ -510,7 +572,7 @@ VALUES (
   '0000000000000001',
   'admin',
   'admin@kthbtm.id',
-  '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', -- password: Admin@2024
+  '$2b$10$43NJtsUgv4kkjFEw.J9DYuMPxEHC30.m3G/Q93IZMb2ea1PrmQGAy', -- password: Admin@2024 (GANTI SETELAH LOGIN PERTAMA!)
   'Administrator KTH BTM',
   'admin',
   true

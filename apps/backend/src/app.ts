@@ -68,10 +68,10 @@ app.use(helmet({
     permittedPolicies: 'none',
   },
   
-  // Cross-Origin settings
-  crossOriginEmbedderPolicy: false, // Disable for compatibility
-  crossOriginOpenerPolicy: { policy: 'same-origin' },
-  crossOriginResourcePolicy: { policy: 'same-origin' },
+  // Cross-Origin settings — this is a cross-origin API, so allow cross-origin loading
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
   
   // Hide X-Powered-By header
   hidePoweredBy: true,
@@ -96,13 +96,17 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(compression());
 
 // Session management
+// pgSession store — errors are caught so server doesn't crash if DB is unavailable
+const pgStore = new PgSession({
+  pool,
+  tableName: 'sessions',
+  createTableIfMissing: true,
+  errorLog: (err: Error) => console.error('Session store error:', err.message),
+});
+
 app.use(
   session({
-    store: new PgSession({
-      pool,
-      tableName: 'sessions',
-      createTableIfMissing: true,
-    }),
+    store: pgStore,
     secret: config.session.secret,
     resave: config.session.resave,
     saveUninitialized: config.session.saveUninitialized,
