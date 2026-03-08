@@ -21,12 +21,18 @@ export async function activityTracker(
 
   const sessionId = req.sessionID;
   const userId = req.session.userId;
-  const now = new Date();
 
   try {
-    // Get current session from database
+    // Compute inactivity in the DB to avoid Node.js ↔ PostgreSQL timezone drift.
+    // ms_inactive is NULL when last_activity has never been set.
     const result = await pool.query(
-      'SELECT last_activity, user_id FROM sessions WHERE sid = $1',
+      `SELECT
+         user_id,
+         last_activity,
+         CASE WHEN last_activity IS NULL THEN NULL
+              ELSE EXTRACT(EPOCH FROM (NOW() - last_activity)) * 1000
+         END AS ms_inactive
+       FROM sessions WHERE sid = $1`,
       [sessionId]
     );
 
@@ -43,38 +49,35 @@ export async function activityTracker(
       return;
     }
 
-    const session = result.rows[0];
-    const lastActivity = session.last_activity ? new Date(session.last_activity) : null;
+    const msInactive: number | null = result.rows[0].ms_inactive !== null
+      ? parseFloat(result.rows[0].ms_inactive)
+      : null;
 
     // Check if session has timed out (15 minutes of inactivity)
-    if (lastActivity) {
-      const inactivityDuration = now.getTime() - lastActivity.getTime();
+    if (msInactive !== null && msInactive > SESSION_TIMEOUT) {
+      // Session timed out
+      console.log(`Session timeout for user ${userId}: ${msInactive}ms inactive`);
 
-      if (inactivityDuration > SESSION_TIMEOUT) {
-        // Session timed out
-        console.log(`Session timeout for user ${userId}: ${inactivityDuration}ms inactive`);
+      // Log to session history
+      await logSessionEnd(userId, sessionId, req.ip || 'unknown', 'timeout');
 
-        // Log to session history
-        await logSessionEnd(userId, sessionId, req.ip || 'unknown', 'timeout');
+      // Destroy session
+      req.session.destroy((err) => {
+        if (err) console.error('Error destroying session:', err);
+      });
 
-        // Destroy session
-        req.session.destroy((err) => {
-          if (err) console.error('Error destroying session:', err);
-        });
+      res.status(401).json({
+        success: false,
+        message: 'Sesi Anda telah berakhir karena tidak aktif. Silakan login kembali.',
+        sessionExpired: true,
+        reason: 'timeout',
+      });
+      return;
+    }
 
-        res.status(401).json({
-          success: false,
-          message: 'Sesi Anda telah berakhir karena tidak aktif. Silakan login kembali.',
-          sessionExpired: true,
-          reason: 'timeout',
-        });
-        return;
-      }
-
-      // Calculate time remaining until timeout
-      const timeRemaining = SESSION_TIMEOUT - inactivityDuration;
-
-      // Add warning header if timeout is approaching (less than 1 minute remaining)
+    // Add warning header if timeout is approaching (less than 1 minute remaining)
+    if (msInactive !== null) {
+      const timeRemaining = SESSION_TIMEOUT - msInactive;
       if (timeRemaining <= WARNING_BEFORE_TIMEOUT) {
         res.setHeader('X-Session-Warning', 'true');
         res.setHeader('X-Session-Remaining', Math.floor(timeRemaining / 1000).toString());
@@ -87,12 +90,12 @@ export async function activityTracker(
 
     await pool.query(
       `UPDATE sessions 
-       SET last_activity = $1, 
-           user_id = $2,
-           ip_address = $3,
-           user_agent = $4
-       WHERE sid = $5`,
-      [now, userId, ipAddress, userAgent, sessionId]
+       SET last_activity = NOW(), 
+           user_id = $1,
+           ip_address = $2,
+           user_agent = $3
+       WHERE sid = $4`,
+      [userId, ipAddress, userAgent, sessionId]
     );
 
     // Continue to next middleware
@@ -162,7 +165,12 @@ export async function checkSessionStatus(req: Request, res: Response) {
   try {
     const sessionId = req.sessionID;
     const result = await pool.query(
-      'SELECT last_activity FROM sessions WHERE sid = $1',
+      `SELECT
+         last_activity,
+         CASE WHEN last_activity IS NULL THEN 0
+              ELSE EXTRACT(EPOCH FROM (NOW() - last_activity)) * 1000
+         END AS ms_inactive
+       FROM sessions WHERE sid = $1`,
       [sessionId]
     );
 
@@ -174,18 +182,14 @@ export async function checkSessionStatus(req: Request, res: Response) {
       });
     }
 
-    const lastActivity = result.rows[0].last_activity
-      ? new Date(result.rows[0].last_activity)
-      : new Date();
-    const now = new Date();
-    const inactivityDuration = now.getTime() - lastActivity.getTime();
-    const timeRemaining = SESSION_TIMEOUT - inactivityDuration;
+    const msInactive = parseFloat(result.rows[0].ms_inactive);
+    const timeRemaining = SESSION_TIMEOUT - msInactive;
 
     return res.json({
       success: true,
       data: {
         sessionId,
-        lastActivity,
+        lastActivity: result.rows[0].last_activity,
         timeRemaining: Math.max(0, Math.floor(timeRemaining / 1000)), // in seconds
         isWarning: timeRemaining <= WARNING_BEFORE_TIMEOUT,
         timeout: SESSION_TIMEOUT / 1000, // in seconds
@@ -247,6 +251,14 @@ export async function initSessionHistory(
        VALUES ($1, $2, $3, $4)
        ON CONFLICT DO NOTHING`,
       [userId, sessionId, ipAddress, userAgent]
+    );
+
+    // Reset last_activity to NOW() so the activity tracker doesn't immediately
+    // time out sessions whose DB row was reused from a previous login.
+    // Also set the user_id column so logoutAllOtherSessions works correctly.
+    await pool.query(
+      `UPDATE sessions SET last_activity = NOW(), user_id = $1 WHERE sid = $2`,
+      [userId, sessionId]
     );
   } catch (error) {
     console.error('Error initializing session history:', error);

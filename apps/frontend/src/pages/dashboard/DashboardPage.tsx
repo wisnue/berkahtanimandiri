@@ -96,24 +96,29 @@ export default function DashboardPage() {
 
   const loadData = async () => {
     setLoading(true);
-    const [userRes, anggotaRes, lahanRes, pnbpRes, keuanganRes, monthlyRes] = await Promise.all([
-      authService.getCurrentUser(),
-      anggotaService.getStatistics(),
-      lahanService.getStatistics(),
-      pnbpService.getStatistics(),
-      keuanganService.getStatistics(),
-      keuanganService.getMonthlyReport(),
-    ]);
-    if (userRes.success) setUser(userRes.data);
-    if (anggotaRes.success) setAnggotaStats(anggotaRes.data);
-    if (lahanRes.success) setLahanStats(lahanRes.data);
-    if (pnbpRes.success) setPnbpStats(pnbpRes.data);
-    if (keuanganRes.success) setKeuanganStats(keuanganRes.data);
-    if (monthlyRes.success) setMonthlyReport(monthlyRes.data);
-    setLoading(false);
+    try {
+      const [userRes, anggotaRes, lahanRes, pnbpRes, keuanganRes, monthlyRes] = await Promise.all([
+        authService.getCurrentUser(),
+        anggotaService.getStatistics(),
+        lahanService.getStatistics(),
+        pnbpService.getStatistics(),
+        keuanganService.getStatistics(),
+        keuanganService.getMonthlyReport(),
+      ]);
+      if (userRes.success) setUser(userRes.data);
+      if (anggotaRes.success) setAnggotaStats(anggotaRes.data);
+      if (lahanRes.success) setLahanStats(lahanRes.data);
+      if (pnbpRes.success) setPnbpStats(pnbpRes.data);
+      if (keuanganRes.success) setKeuanganStats(keuanganRes.data);
+      if (monthlyRes.success) setMonthlyReport(monthlyRes.data);
+    } catch (err) {
+      console.error('Dashboard loadData error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (!user || loading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -124,7 +129,13 @@ export default function DashboardPage() {
     );
   }
 
-  const userInfo = { fullName: user.namaLengkap, role: user.role };
+  // Jika tidak ada user setelah loading, redirect ke login
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
+
+  const userInfo = { fullName: (user as any).fullName || (user as any).namaLengkap || user.email, role: user.role };
 
   // Chart data
   const chartData = MONTHS_SHORT.map((name, idx) => {

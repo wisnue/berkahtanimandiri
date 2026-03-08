@@ -148,6 +148,16 @@ export class AuthController {
       // Create session
       req.session.userId = user.id;
 
+      // Explicitly save session to store BEFORE sending response.
+      // Required when using async session stores (Supabase/pg) to ensure
+      // the session is persisted before the client makes the next request.
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+
       // Initialize session history
       await initSessionHistory(user.id, req.sessionID, ipAddress, userAgent);
 
