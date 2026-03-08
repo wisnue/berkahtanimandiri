@@ -130,9 +130,9 @@ export function SettingsPage() {
     setLoading(true);
     setSystemError(null);
     try {
-      const response = await api.get<{ data: any }>('/settings/system');
-      if (response.success && response.data.data) {
-        setSystemSettings(response.data.data);
+      const response = await api.get<any>('/settings/system');
+      if (response.success && response.data) {
+        setSystemSettings(response.data);
       } else {
         setSystemError(response.message || 'Gagal memuat pengaturan sistem');
       }
@@ -146,9 +146,9 @@ export function SettingsPage() {
   const loadOrganizationSettings = async () => {
     setOrgError(null);
     try {
-      const response = await api.get<{ data: OrganizationSettings }>('/settings/organization');
-      if (response.success && response.data.data) {
-        setOrgSettings(response.data.data);
+      const response = await api.get<OrganizationSettings>('/settings/organization');
+      if (response.success && response.data) {
+        setOrgSettings(response.data);
       } else {
         setOrgError(response.message || 'Gagal memuat informasi organisasi');
       }
@@ -159,9 +159,9 @@ export function SettingsPage() {
 
   const loadBackupHistory = async () => {
     try {
-      const response = await api.get<{ data: { backups: BackupItem[] } }>('/settings/backup/history?limit=20');
+      const response = await api.get<{ backups: BackupItem[] }>('/settings/backup/history?limit=20');
       if (response.success) {
-        setBackupHistory(response.data.data.backups);
+        setBackupHistory(response.data?.backups ?? []);
       } else {
         showToast.error(response.message || 'Gagal memuat riwayat backup');
       }
@@ -172,9 +172,9 @@ export function SettingsPage() {
 
   const loadBackupStatistics = async () => {
     try {
-      const response = await api.get<{ data: typeof backupStats }>('/settings/backup/statistics');
-      if (response.success) {
-        setBackupStats(response.data.data);
+      const response = await api.get<typeof backupStats>('/settings/backup/statistics');
+      if (response.success && response.data) {
+        setBackupStats(response.data);
       }
     } catch {
       // fail silently for stats
@@ -183,12 +183,12 @@ export function SettingsPage() {
 
   const loadAuditLogs = async () => {
     try {
-      const response = await api.get<{ data: { logs: AuditLogItem[]; total: number } }>(
+      const response = await api.get<{ logs: AuditLogItem[]; total: number }>(
         `/settings/audit-log?limit=20&offset=${(auditPage - 1) * 20}`
       );
       if (response.success) {
-        setAuditLogs(response.data.data.logs);
-        setAuditTotal(response.data.data.total);
+        setAuditLogs(response.data?.logs ?? []);
+        setAuditTotal(response.data?.total ?? 0);
       } else {
         showToast.error(response.message || 'Gagal memuat audit log');
       }
@@ -309,9 +309,9 @@ export function SettingsPage() {
 
     setLoading(true);
     try {
-      const response = await api.post<{ data: { deletedCount: number } }>('/settings/backup/cleanup', {});
+      const response = await api.post<{ deletedCount: number }>('/settings/backup/cleanup', {});
       if (response.success) {
-        showToast.success(`Cleanup selesai: ${response.data.data.deletedCount} backup lama dihapus`);
+        showToast.success(`Cleanup selesai: ${response.data?.deletedCount ?? 0} backup lama dihapus`);
         await loadBackupHistory();
         await loadBackupStatistics();
       } else {

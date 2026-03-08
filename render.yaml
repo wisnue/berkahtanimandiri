@@ -15,7 +15,7 @@
         value: production
       - key: PORT
         value: 10000
-      # DATABASE_URL: Isi di Render Dashboard → Environment
+      # DATABASE_URL: Isi di Vercel Dashboard → Project → Settings → Environment Variables
       # Salin dari Supabase: Project Settings → Database → Connection string → URI
       # Gunakan Transaction Pooler (port 6543), contoh:
       # postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
