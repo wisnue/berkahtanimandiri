@@ -541,6 +541,46 @@ CREATE TRIGGER update_organization_settings_updated_at
 -- Ensure is_public column exists (may be missing if table was created by older migration)
 ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE;
 
+-- Migrate organization_settings columns from old names (org_*) to new names (organization_*)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='organization_settings' AND column_name='org_name') THEN
+    ALTER TABLE organization_settings RENAME COLUMN org_name TO organization_name;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='organization_settings' AND column_name='org_short_name') THEN
+    ALTER TABLE organization_settings RENAME COLUMN org_short_name TO organization_short_name;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='organization_settings' AND column_name='org_address') THEN
+    ALTER TABLE organization_settings RENAME COLUMN org_address TO organization_address;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='organization_settings' AND column_name='org_phone') THEN
+    ALTER TABLE organization_settings RENAME COLUMN org_phone TO organization_phone;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='organization_settings' AND column_name='org_email') THEN
+    ALTER TABLE organization_settings RENAME COLUMN org_email TO organization_email;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='organization_settings' AND column_name='org_website') THEN
+    ALTER TABLE organization_settings RENAME COLUMN org_website TO organization_website;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='organization_settings' AND column_name='org_logo') THEN
+    ALTER TABLE organization_settings RENAME COLUMN org_logo TO organization_logo;
+  END IF;
+END $$;
+
+-- Add new columns not present in older migration
+ALTER TABLE organization_settings ADD COLUMN IF NOT EXISTS organization_name VARCHAR(255);
+ALTER TABLE organization_settings ADD COLUMN IF NOT EXISTS organization_short_name VARCHAR(50);
+ALTER TABLE organization_settings ADD COLUMN IF NOT EXISTS organization_logo TEXT;
+ALTER TABLE organization_settings ADD COLUMN IF NOT EXISTS organization_address TEXT;
+ALTER TABLE organization_settings ADD COLUMN IF NOT EXISTS organization_phone VARCHAR(20);
+ALTER TABLE organization_settings ADD COLUMN IF NOT EXISTS organization_email VARCHAR(100);
+ALTER TABLE organization_settings ADD COLUMN IF NOT EXISTS organization_website VARCHAR(255);
+ALTER TABLE organization_settings ADD COLUMN IF NOT EXISTS head_name VARCHAR(255);
+ALTER TABLE organization_settings ADD COLUMN IF NOT EXISTS head_position VARCHAR(100);
+ALTER TABLE organization_settings ADD COLUMN IF NOT EXISTS secretary_name VARCHAR(255);
+ALTER TABLE organization_settings ADD COLUMN IF NOT EXISTS treasurer_name VARCHAR(255);
+ALTER TABLE organization_settings ADD COLUMN IF NOT EXISTS fiscal_year_start INTEGER DEFAULT 1;
+
 -- Insert default organization settings row
 INSERT INTO organization_settings (organization_name, organization_short_name)
 VALUES ('Kelompok Tani Hutan Berkah Tani Mandiri', 'KTH BTM')
