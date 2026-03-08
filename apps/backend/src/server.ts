@@ -11,7 +11,7 @@ async function startServer() {
     const dbConnected = await testDatabaseConnection();
     if (!dbConnected) {
       console.error('⚠️  Database connection failed. Server will start anyway.');
-      console.error('⚠️  Set DATABASE_URL environment variable in Render Dashboard.');
+      console.error('⚠️  Set DATABASE_URL environment variable in Vercel Dashboard → Project Settings → Environment Variables.');
     }
 
     // Initialize schedulers only if DB is connected

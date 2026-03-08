@@ -207,21 +207,16 @@ Jika berhasil login dan data muncul, deployment sukses. ✅
 
 ---
 
-## Perbandingan Opsi Deploy
+## Perbandingan Opsi Hosting Backend
 
-| Fitur | Vercel Backend (Serverless) | Render.com (Always-on) |
+| Fitur | Vercel (Serverless) | VPS / Server Dedicated |
 |---|---|---|
-| Setup | Mudah, 1 platform | Perlu akun Render terpisah |
-| Harga free tier | Cukup untuk API ringan | 750 jam/bulan (cukup untuk 1 service) |
-| Cold start | Ada (~1-3 detik) | Tidak ada (always-on) |
-| Scheduler / Cron | ❌ Tidak berjalan | ✅ Berjalan normal |
-| File upload persisten | ❌ /tmp saja | ✅ Disk persisten |
-| Timeout | 10 detik (free) | Tidak ada batas khusus |
-| WebSocket | ❌ | ✅ |
-| Cocok untuk | API REST stateless, low traffic | Aplikasi penuh dengan fitur lengkap |
-
-> Untuk aplikasi KTH BTM yang memiliki fitur backup dan scheduler, **Render.com lebih direkomendasikan**.
-> Lihat [README.md](../README.md) untuk panduan deploy dengan Render.
+| Setup | Mudah, deploy dari GitHub | Perlu konfigurasi manual |
+| Harga | Free tier tersedia | Berbayar |
+| Cold start | Ada (~1–3 detik) | Tidak ada |
+| Scheduler / Cron | Tidak berjalan | Berjalan normal |
+| File upload persisten | Hanya /tmp | Disk tersedia |
+| WebSocket | Tidak didukung | Didukung |
 
 ---
 

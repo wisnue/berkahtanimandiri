@@ -1,14 +1,16 @@
-services:
-  - type: web
-    name: kth-btm-backend
-    env: node
-    region: singapore
-    plan: free
-    rootDir: apps/backend
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    healthCheckPath: /health
-    envVars:
+# File ini tidak lagi digunakan.
+# Backend sekarang di-deploy ke Vercel (bukan Render).
+# Lihat docs/DEPLOY_GUIDE.md untuk panduan deploy lengkap.
+#
+# Stack produksi saat ini:
+#   Frontend  → Vercel (root dir: apps/frontend)
+#   Backend   → Vercel (root dir: apps/backend)
+#   Database  → Supabase (PostgreSQL)
+
+# --- ARCHIVED (tidak aktif) ---
+# services:
+#   - type: web
+#     name: kth-btm-backend
       - key: NODE_ENV
         value: production
       - key: PORT

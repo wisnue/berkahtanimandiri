@@ -1,4 +1,4 @@
-# 🌳 Sistem Informasi KTH Berkah Tani Mandiri
+﻿# 🌳 Sistem Informasi KTH Berkah Tani Mandiri
 
 > **Sistem Administrasi Resmi KTH** — Tertib Administrasi, Kepatuhan PNBP, Transparansi Keuangan, Kesiapan Audit
 
@@ -7,7 +7,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green)](https://nodejs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-3ecf8e)](https://supabase.com/)
 [![Frontend](https://img.shields.io/badge/Frontend-Vercel-black)](https://vercel.com/)
-[![Backend](https://img.shields.io/badge/Backend-Render-46e3b7)](https://render.com/)
+[![Backend](https://img.shields.io/badge/Backend-Vercel-black)](https://vercel.com/)
 
 ---
 
@@ -35,21 +35,21 @@ Browser → Frontend :5173 → Backend :5001 → PostgreSQL :5433
 
 ### Production (Cloud)
 ```
-Browser → Vercel (Frontend) → Render.com (Backend) → Supabase (Database)
+Browser → Vercel Project 1 (Frontend) → Vercel Project 2 (Backend) → Supabase (Database)
 ```
 
 ```
 Monorepo Structure:
 ├── apps/
 │   ├── frontend/          → React + Vite + PWA          (deploy: Vercel)
-│   └── backend/           → Node.js + Express + Drizzle (deploy: Render.com)
+│   └── backend/           → Node.js + Express + Drizzle (deploy: Vercel)
 ├── packages/
 │   └── shared/            → Shared types & validators
 ├── supabase/
 │   └── setup.sql          → SQL lengkap setup database Supabase
 ├── docs/                  → Dokumentasi & SOP
-├── vercel.json            → Konfigurasi deploy Vercel
-└── render.yaml            → Konfigurasi deploy Render.com
+├── apps/frontend/vercel.json  → Konfigurasi Vercel frontend
+└── apps/backend/vercel.json   → Konfigurasi Vercel backend
 ```
 
 ---
@@ -76,8 +76,7 @@ Monorepo Structure:
 
 ### Database & Deployment
 - **Supabase** — PostgreSQL cloud (production)
-- **Vercel** — Frontend hosting (production)
-- **Render.com** — Backend hosting (production)
+- **Vercel** — Frontend + Backend hosting (production)
 - **PostgreSQL 18** — Local development
 
 ---
@@ -207,156 +206,57 @@ npm run format           # Format code dengan Prettier
 
 ---
 
-## 🌐 Deploy ke Production (Vercel + Render + Supabase)
+## 🌐 Deploy ke Production (Vercel + Supabase)
 
 Aplikasi ini siap deploy dengan arsitektur gratis:
-**Supabase** (Database) + **Render.com** (Backend) + **Vercel** (Frontend)
+**Supabase** (Database) + **Vercel** (Frontend + Backend)
+
+Lihat panduan lengkap di **[docs/DEPLOY_GUIDE.md](docs/DEPLOY_GUIDE.md)**.
 
 ---
 
-### 📦 Langkah 0: Push Kode ke GitHub
+### Ringkasan Langkah Deploy
 
-> Wajib dilakukan sebelum deploy ke mana pun.
+| # | Langkah | Platform |
+|---|---|---|
+| 1 | Setup database & jalankan `supabase/setup.sql` | Supabase |
+| 2 | Deploy backend (root dir: `apps/backend`) | Vercel |
+| 3 | Deploy frontend (root dir: `apps/frontend`) | Vercel |
+| 4 | Update `CORS_ORIGIN` di backend dengan URL frontend | Vercel |
 
-1. Buat repository baru di [github.com](https://github.com):
-   - Klik **+** → **New repository**
-   - Name: `kth-btm`, Visibility: **Private**
-   - Klik **Create repository**
-
-2. Jalankan perintah ini di terminal VS Code:
-
-```bash
-git init
-git add .
-git commit -m "Initial commit - KTH BTM v1.0"
-git remote add origin https://github.com/NAMA_GITHUB_ANDA/kth-btm.git
-git branch -M main
-git push -u origin main
-```
-
-> Ganti `NAMA_GITHUB_ANDA` dengan username GitHub Anda
-
----
-
-### 🗄️ Langkah 1: Setup Supabase (Database)
-
-**1.1 — Buat akun & project:**
-1. Buka [supabase.com](https://supabase.com) → **Start your project**
-2. Sign up dengan GitHub (lebih mudah)
-3. Klik **New Project**, isi:
-   - **Name**: `kth-btm`
-   - **Database Password**: buat password kuat, contoh `KthBtm@2026!` → **simpan di notepad!**
-   - **Region**: `Southeast Asia (Singapore)`
-4. Klik **Create new project** → tunggu ~2 menit
-
-**1.2 — Jalankan SQL setup:**
-1. Di sidebar kiri klik **SQL Editor**
-2. Klik **New query**
-3. Buka file `supabase/setup.sql` di VS Code → **Ctrl+A** → **Ctrl+C**
-4. Kembali ke Supabase, **paste** di area SQL → klik tombol **Run** (hijau)
-5. Di bagian bawah akan muncul tabel hasil verifikasi 4 baris ✅
-
-**1.3 — Ambil Connection String:**
-1. Di sidebar kiri klik **Settings** → **Database**
-2. Scroll ke **Connection string** → pilih tab **URI**
-3. Salin string yang dimulai dengan `postgresql://postgres...`
-4. **Simpan di notepad** — akan dipakai di langkah 2
-
----
-
-### ⚡ Langkah 2: Deploy Backend ke Render.com
-
-**2.1 — Buat akun:**
-1. Buka [render.com](https://render.com) → **Get Started for Free**
-2. Sign up dengan GitHub
-
-**2.2 — Buat Web Service:**
-1. Klik **New +** → **Web Service**
-2. Klik **Connect** pada repository `kth-btm`
-3. Isi settings berikut:
-
-| Field | Value |
-|-------|-------|
-| **Name** | `kth-btm-backend` |
-| **Region** | Singapore |
-| **Root Directory** | `apps/backend` |
-| **Runtime** | Node |
-| **Build Command** | `npm install && npm run build` |
-| **Start Command** | `npm start` |
-| **Instance Type** | Free |
-
-**2.3 — Set Environment Variables:**
-
-Scroll ke bagian **Environment Variables**, klik **Add Environment Variable**, tambahkan satu per satu:
+### Environment Variables Backend (Vercel)
 
 | Key | Value |
-|-----|-------|
+|---|---|
 | `NODE_ENV` | `production` |
-| `PORT` | `10000` |
-| `DATABASE_URL` | *(paste connection string dari Supabase — langkah 1.3)* |
-| `DB_HOST` | *(hostname saja, contoh: `aws-0-ap-southeast-1.pooler.supabase.com`)* |
-| `DB_PORT` | `6543` |
-| `DB_NAME` | `postgres` |
-| `DB_USER` | *(lihat di Supabase → Settings → Database → User)* |
-| `DB_PASSWORD` | *(password Supabase dari langkah 1.1)* |
-| `SESSION_SECRET` | *(buat random string di [generate-secret.vercel.app/64](https://generate-secret.vercel.app/64))* |
-| `CORS_ORIGIN` | `https://kth-btm.vercel.app` *(sementara, update setelah deploy Vercel)* |
+| `DATABASE_URL` | *(Supabase Transaction Pooler URL — port 6543)* |
+| `SESSION_SECRET` | *(random string ≥ 32 karakter)* |
+| `CORS_ORIGIN` | `https://[nama-frontend].vercel.app` |
+| `UPLOAD_DIR` | `/tmp/uploads` |
 
-4. Klik **Create Web Service** → tunggu ~5 menit hingga deploy selesai
-5. Catat URL backend yang muncul, contoh: `https://kth-btm-backend.onrender.com`
-
----
-
-### 🌐 Langkah 3: Deploy Frontend ke Vercel
-
-**3.1 — Buat akun:**
-1. Buka [vercel.com](https://vercel.com) → **Sign Up**
-2. Sign up dengan GitHub
-
-**3.2 — Import & Deploy:**
-1. Di dashboard klik **Add New** → **Project**
-2. Cari repository `kth-btm` → klik **Import**
-3. Di halaman Configure Project:
-   - **Framework Preset**: `Vite` *(pilih dari dropdown)*
-   - Klik **Edit** di bagian Root Directory → ketik `apps/frontend` → klik **Continue**
-4. Buka bagian **Environment Variables**, tambahkan:
+### Environment Variables Frontend (Vercel)
 
 | Key | Value |
-|-----|-------|
-| `VITE_API_URL` | `https://kth-btm-backend.onrender.com/api` *(URL backend dari langkah 2.5)* |
-
-5. Klik **Deploy** → tunggu ~2 menit
-6. Salin URL Vercel yang muncul, contoh: `https://kth-btm.vercel.app`
-
----
-
-### 🔄 Langkah 4: Update CORS di Render
-
-Setelah dapat URL Vercel yang pasti:
-1. Buka Render.com → pilih service `kth-btm-backend`
-2. Klik tab **Environment**
-3. Cari `CORS_ORIGIN` → klik **Edit** → ubah ke URL Vercel yang sebenarnya
-4. Klik **Save Changes** → akan otomatis redeploy dalam 1–2 menit
-
----
+|---|---|
+| `VITE_API_URL` | `https://[nama-backend].vercel.app/api` |
 
 ### ✅ Test Akhir
 
-1. Buka URL Vercel Anda di browser
-2. Login dengan: **username** `admin`, **password** `Admin@2024`
-3. **Segera ganti password** di menu Profile setelah masuk!
+1. Buka URL Vercel frontend di browser
+2. Login: **email** `admin@kthbtm.id`, **password** `Admin@2024`
+3. **Segera ganti password** setelah masuk pertama kali!
 
 ---
 
 ### ⚠️ Hal Penting yang Perlu Diketahui
 
 | # | Hal | Keterangan |
-|---|-----|------------|
-| 1 | **Render free tier tidur** | Server tidur setelah 15 menit tidak ada request. Request pertama bisa lambat 30–60 detik — ini normal |
-| 2 | **File upload sementara** | Di Render free tier, file yang diupload terhapus saat redeploy. Upgrade ke paid atau gunakan Supabase Storage untuk produksi serius |
-| 3 | **Custom domain** | Vercel dan Render mendukung custom domain di semua tier (contoh: `app.kthbtm.id`) |
-| 4 | **HTTPS otomatis** | SSL/HTTPS sudah otomatis aktif di Vercel dan Render — tidak perlu setup tambahan |
-| 5 | **Backup database** | Supabase free tier punya backup harian 7 hari. Untuk keamanan lebih, aktifkan backup manual dari menu Settings |
+|---|---|---|
+| 1 | **Cold start Vercel** | Delay ~1–3 detik pada request pertama setelah idle — normal |
+| 2 | **File upload sementara** | File disimpan di `/tmp`, terhapus setelah request. Gunakan Supabase Storage untuk file permanen |
+| 3 | **Scheduler tidak aktif** | Fitur backup/scheduler otomatis tidak berjalan di serverless |
+| 4 | **Custom domain** | Vercel mendukung custom domain di semua tier (SSL otomatis) |
+| 5 | **Backup database** | Supabase free tier punya backup harian 7 hari |
 
 ---
 
