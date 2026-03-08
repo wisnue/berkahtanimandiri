@@ -6,18 +6,19 @@ import { autoBackupScheduler } from './services/autoBackupScheduler.service';
 
 async function startServer() {
   try {
-    // Test database connection
+    // Test database connection — warn but do NOT exit, so the server
+    // can still respond to health checks and return proper error messages
     const dbConnected = await testDatabaseConnection();
     if (!dbConnected) {
-      console.error('❌ Cannot start server without database connection');
-      process.exit(1);
+      console.error('⚠️  Database connection failed. Server will start anyway.');
+      console.error('⚠️  Set DATABASE_URL environment variable in Render Dashboard.');
     }
 
-    // Initialize backup scheduler
-    await autoBackupScheduler.initialize();
-
-    // Start notification scheduler
-    notificationScheduler.start();
+    // Initialize schedulers only if DB is connected
+    if (dbConnected) {
+      await autoBackupScheduler.initialize();
+      notificationScheduler.start();
+    }
 
     // Start server
     const server = app.listen(config.port, () => {

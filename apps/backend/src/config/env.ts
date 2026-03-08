@@ -6,7 +6,7 @@ const envSchema = z.object({
   PORT: z.string().default('5000'),
   
   // Database
-  DATABASE_URL: z.string(),
+  DATABASE_URL: z.string().default(''),
   DB_HOST: z.string().default('localhost'),
   DB_PORT: z.string().default('5432'),
   DB_NAME: z.string().default('kth_btm'),

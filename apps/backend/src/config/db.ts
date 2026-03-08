@@ -5,13 +5,17 @@ import * as schema from '../db/schema';
 
 // Create PostgreSQL connection pool
 // Uses DATABASE_URL connection string (required for Supabase/cloud DBs)
-export const pool = new Pool({
-  connectionString: config.db.url,
-  ssl: config.isProduction ? { rejectUnauthorized: false } : false,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-});
+export const pool = new Pool(
+  config.db.url
+    ? {
+        connectionString: config.db.url,
+        ssl: config.isProduction ? { rejectUnauthorized: false } : false,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+      }
+    : { host: 'localhost' } // placeholder — will fail gracefully on connect
+);
 
 // Initialize Drizzle ORM
 export const db = drizzle(pool, { schema });
