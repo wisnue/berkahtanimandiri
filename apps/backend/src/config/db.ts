@@ -5,11 +5,13 @@ import * as schema from '../db/schema';
 
 // Create PostgreSQL connection pool
 // Uses DATABASE_URL connection string (required for Supabase/cloud DBs)
+const isCloudDb = config.db.url && (config.db.url.includes('supabase') || config.db.url.includes('pooler') || config.isProduction);
+
 export const pool = new Pool(
   config.db.url
     ? {
         connectionString: config.db.url,
-        ssl: config.isProduction ? { rejectUnauthorized: false } : false,
+        ssl: isCloudDb ? { rejectUnauthorized: false } : false,
         max: 20,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 5000,
